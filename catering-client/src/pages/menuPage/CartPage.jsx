@@ -15,8 +15,8 @@ const CartPage = () => {
   const navigate = useNavigate();
   const axiosSecure = useAxiosSecure();
   const { user } = useContext(AuthContext);
-  const { users, refetch } = useUsers();
-  const [cart] = useCart();
+  const { users } = useUsers();
+  const [cart, refetch] = useCart();
   const [cartItems, setCartItems] = useState([]);
   // console.log(cartItems)
   const [voucher, setVoucher] = useState([]);
