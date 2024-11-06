@@ -31,7 +31,8 @@ const OnlineBooking = () => {
   const [lastName, setLastName] = useState("");
   const [firstName, setFirstName] = useState("");
   const [cart] = useCart();
-  const [isMobileNumberModalVisible, setIsMobileNumberModalVisible] = useState(false);
+  const [isMobileNumberModalVisible, setIsMobileNumberModalVisible] =
+    useState(false);
   const [mobileNumber, setMobileNumber] = useState("");
   const [isSaveEnabled, setIsSaveEnabled] = useState(false);
   const { orderTotal } = location.state || { orderTotal: 0 };
@@ -114,7 +115,9 @@ const OnlineBooking = () => {
 
   const handleSubmitMobileNumber = async (e) => {
     e.preventDefault();
-    const formattedNumber = `+63${mobileNumber.startsWith("0") ? mobileNumber.slice(1) : mobileNumber}`;
+    const formattedNumber = `+63${
+      mobileNumber.startsWith("0") ? mobileNumber.slice(1) : mobileNumber
+    }`;
 
     try {
       const response = await axiosSecure.patch(
@@ -130,7 +133,9 @@ const OnlineBooking = () => {
         }
         setIsMobileNumberModalVisible(true);
       } else {
-        throw new Error(response.data.message || "Failed to save mobile number");
+        throw new Error(
+          response.data.message || "Failed to save mobile number"
+        );
       }
     } catch (error) {
       Swal.fire("Error", error.message, "error");
@@ -149,7 +154,9 @@ const OnlineBooking = () => {
     <div className="max-w-screen-2xl container mx-auto xl:px-24 px-4">
       <div className="py-24 flex flex-col items-center justify-center"></div>
       <div className="w-full py-48 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8">
-        <h1 className="font-bold text-2xl text-black flex-1 text-center">Catering Order Form</h1>
+        <h1 className="font-bold text-2xl text-black flex-1 text-center">
+          Catering Order Form
+        </h1>
 
         {/* Email Field */}
         <div className="relative mt-6">
@@ -222,7 +229,42 @@ const OnlineBooking = () => {
           </label>
         </div>
 
-     
+        <div class="relative mx-auto mt-4">
+          <select
+            id="countries"
+            class="block w-full px-2.5 pb-2.5 pt-4 text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
+          >
+            <option selected disabled value="">
+              Select Type of Event
+            </option>
+            <option value="corporate">Corporate Event</option>
+            <option value="wedding">Wedding</option>
+            <option value="birth">Birthday Party</option>
+            <option value="social">Social Gathering</option>
+            <option value="other">Other</option>
+          </select>
+          <label
+            htmlFor="countries"
+            class="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
+          >
+            Type of Event
+          </label>
+        </div>
+
+        <div className="relative mt-4">
+            <input
+              type="text"
+              id="lastName"
+              className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
+              placeholder=" "
+            />
+            <label
+              htmlFor="lastName"
+              className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 start-2 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
+            >
+              Number of Pax
+            </label>
+          </div>
 
         <div className="flex justify-end mt-4">
           <button
@@ -233,7 +275,6 @@ const OnlineBooking = () => {
           >
             Submit Order
           </button>
-          
         </div>
       </div>
     </div>
