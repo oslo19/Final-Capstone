@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Cards from "../../components/Cards";
 import { FaFilter } from "react-icons/fa";
+import MenuModal from "../../components/MenuModal";
 
 const Menu = () => {
   const [menu, setMenu] = useState([]);
@@ -194,8 +195,10 @@ const Menu = () => {
         <div className="grid md:grid-cols-4 sm:grid-cols-2 grid-cols-1 gap-4 ">
           {currentItems.map((item, index) => (
             <Cards key={index} item={item} />
+            
           ))}
         </div>
+       
       </div>
 
        {/* Pagination */}
