@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const {Schema} = mongoose;
 
-// create schema object for Menu Items
 const menuSchema = new Schema({
     menuItemId: String,
     name: {
@@ -15,13 +14,17 @@ const menuSchema = new Schema({
     category: String,
     quantity: Number,
     price: Number,
+    menuTypes: {
+        type: [String],
+        enum: ["buffet", "packed meals", "cocktail"],
+        required: true
+    },
     createdAt: {
         type: Date,
         default: Date.now
     }
+});
 
-})
 
-// create model
 const Menu = mongoose.model("Menu", menuSchema);
 module.exports = Menu;

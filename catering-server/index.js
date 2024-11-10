@@ -38,18 +38,22 @@ app.post('/jwt', async (req, res) => {
 //   import routes here
 const menuRoutes = require('./api/routes/menuRoutes');
 const cartRoutes = require('./api/routes/cartRoutes');
-const userRoutes = require('./api/routes/userRoutes')
-const paymentRoutes = require('./api/routes/paymentRoutes')
-const rentalRoutes = require('./api/routes/rentalRoutes')
-const voucherRoutes = require('./api/routes/voucherRoutes')
-const otpRoutes = require('./api/routes/otpRoutes')
+const userRoutes = require('./api/routes/userRoutes');
+const paymentRoutes = require('./api/routes/paymentRoutes');
+const rentalRoutes = require('./api/routes/rentalRoutes');
+const voucherRoutes = require('./api/routes/voucherRoutes');
+const otpRoutes = require('./api/routes/otpRoutes');
+const bookingCartRoutes = require('./api/routes/bookingCartRoutes');
+const packageRoutes = require('./api/routes/packageRoutes');
 app.use('/menu', menuRoutes)
 app.use('/carts', cartRoutes);
 app.use('/users', userRoutes);
-app.use('/payments', paymentRoutes)
-app.use('/rental', rentalRoutes)
-app.use('/voucher', voucherRoutes)
-app.use('/otp', otpRoutes)
+app.use('/payments', paymentRoutes);
+app.use('/rental', rentalRoutes);
+app.use('/voucher', voucherRoutes);
+app.use('/otp', otpRoutes);
+app.use('/booking-cart', bookingCartRoutes);
+app.use('/packages', packageRoutes);
 
 
 

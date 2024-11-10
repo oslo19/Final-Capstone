@@ -93,6 +93,12 @@ const DashboardLayout = () => {
             </Link>
           </li>
           <li>
+            <Link to="/dashboard/add-package">
+              <FaPlusCircle />
+              Add Food Package
+            </Link>
+          </li>
+          <li>
             <Link to="/dashboard/add-rental">
               <FaPlusCircle />
               Add Rental

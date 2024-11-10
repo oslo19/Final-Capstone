@@ -8,6 +8,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 
 const Main = () => {
   const { loading } = useContext(AuthContext);
+  
   return (
     <div className="bg-prigmayBG">
       {loading ? (
@@ -18,7 +19,9 @@ const Main = () => {
           <div className="min-h-screen">
             <Outlet />
           </div>
+          <div className="">
           <Footer />
+          </div>
         </div>
       )}
     </div>
