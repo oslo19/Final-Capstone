@@ -1,46 +1,26 @@
 import React, { useContext, useState, useEffect } from "react";
-import Map from "../../components/Map";
-import MapSearchBox from "../../components/MapSearchBox";
 import { AuthContext } from "../../contexts/AuthProvider";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
 import Swal from "sweetalert2";
-import { useQuery } from "@tanstack/react-query";
-import { SlLocationPin } from "react-icons/sl";
 import "react-datepicker/dist/react-datepicker.css";
-import useCart from "../../hooks/useCart";
-import { useLocation } from "react-router-dom";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { StaticDateTimePicker } from "@mui/x-date-pickers/StaticDateTimePicker";
-import dayjs from "dayjs";
-import MobileNumberModal from "../../components/MobileNumberModal";
-import LoadingSpinner from "../../components/LoadingSpinner";
 import useUsers from "../../hooks/useUser";
+import MenuModal from "../../components/MenuModal";
+import useMenu from "../../hooks/useMenu";
 
-const defaultCoordinates = [10.239613, 123.780381];
 const OnlineBooking = () => {
   const { users, refetch } = useUsers();
-  const location = useLocation();
   const axiosSecure = useAxiosSecure();
   const { user, sendOtp } = useContext(AuthContext);
-  const [coordinates, setCoordinates] = useState(null);
-  const [address, setAddress] = useState("");
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedDateTime, setSelectedDateTime] = useState(dayjs());
-  const [scheduledText, setScheduledText] = useState("Select a date and time");
   const [lastName, setLastName] = useState("");
   const [firstName, setFirstName] = useState("");
-  const [cart] = useCart();
-  const [isMobileNumberModalVisible, setIsMobileNumberModalVisible] =
-    useState(false);
+  useState(false);
   const [mobileNumber, setMobileNumber] = useState("");
   const [isSaveEnabled, setIsSaveEnabled] = useState(false);
-  const { orderTotal } = location.state || { orderTotal: 0 };
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
-
-  const deliveryFee = 100;
-  const finalTotal = orderTotal + deliveryFee;
+  const [showMenuModal, setShowMenuModal] = useState(false);
+  const [menu, loading] = useMenu();
   const currentUser = users.find((u) => u.email === user.email);
+  const [selectedMenuType, setSelectedMenuType] = useState("");
+
 
   useEffect(() => {
     if (user) {
@@ -57,50 +37,6 @@ const OnlineBooking = () => {
       }
     }
   }, [user, currentUser]);
-
-  useEffect(() => {
-    if (currentUser) {
-      const userCoordinates = currentUser.coordinates;
-      const userAddress = currentUser.address;
-
-      if (Array.isArray(userCoordinates) && userCoordinates.length === 2) {
-        setCoordinates(userCoordinates);
-      } else {
-        setCoordinates(defaultCoordinates);
-      }
-
-      setAddress(userAddress || "No address available");
-    }
-  }, [currentUser]);
-
-  const handleAddressSelect = (suggestion) => {
-    const { lat, lon, display_name } = suggestion;
-
-    if (lat && lon) {
-      setAddress(display_name);
-      setCoordinates([parseFloat(lat), parseFloat(lon)]);
-    } else {
-      Swal.fire("Error", "Invalid coordinates selected.", "error");
-    }
-  };
-
-  const handleSubmitAddress = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await axiosSecure.patch(
-        `/users/${currentUser._id}/address`,
-        { address: address, coordinates: coordinates }
-      );
-      if (response.status === 200) {
-        refetch();
-        Swal.fire("Success", "Address updated successfully", "success");
-      } else {
-        throw new Error("Failed to update address");
-      }
-    } catch (error) {
-      Swal.fire("Error", error.message, "error");
-    }
-  };
 
   const isValidMobileNumber = (value) => {
     const numberWithoutCountryCode = value.replace(/^\+63/, "");
@@ -142,16 +78,16 @@ const OnlineBooking = () => {
     }
   };
 
-  const handleCloseModal = () => {
-    setIsMobileNumberModalVisible(false);
+ const handleMenuToggleModal = () => {
+    setShowMenuModal((prev) => !prev); 
   };
 
-  const handlePaymentChange = (method) => {
-    setSelectedPaymentMethod(method);
+  const handleMenuTypeChange = (event) => {
+    setSelectedMenuType(event.target.value);
   };
 
   return (
-    <div className="max-w-screen-2xl container mx-auto xl:px-24 px-4">
+    <div className="max-w-screen-2xl container mx-auto xl:px-24 px-4 my-9">
       <div className="py-24 flex flex-col items-center justify-center"></div>
       <div className="w-full py-48 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8">
         <h1 className="font-bold text-2xl text-black flex-1 text-center">
@@ -229,12 +165,13 @@ const OnlineBooking = () => {
           </label>
         </div>
 
-        <div class="relative mx-auto mt-4">
+        <div className="relative mx-auto mt-4">
           <select
             id="countries"
-            class="block w-full px-2.5 pb-2.5 pt-4 text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
+            className="block w-full px-2.5 pb-2.5 pt-4 text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
+            defaultValue="" // Sets default selected option
           >
-            <option selected disabled value="">
+            <option value="" disabled>
               Select Type of Event
             </option>
             <option value="corporate">Corporate Event</option>
@@ -243,29 +180,84 @@ const OnlineBooking = () => {
             <option value="social">Social Gathering</option>
             <option value="other">Other</option>
           </select>
+
           <label
             htmlFor="countries"
-            class="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
+            className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
           >
             Type of Event
           </label>
         </div>
 
         <div className="relative mt-4">
-            <input
-              type="text"
-              id="lastName"
-              className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
-              placeholder=" "
-            />
-            <label
-              htmlFor="lastName"
-              className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 start-2 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
-            >
-              Number of Pax
-            </label>
-          </div>
+          <input
+            type="text"
+            id="lastName"
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
+            placeholder=" "
+          />
+          <label
+            htmlFor="lastName"
+            className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 start-2 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
+          >
+            Number of Pax
+          </label>
+        </div>
 
+        <div className="relative mx-auto mt-4">
+          <select
+            id="countries"
+            onChange={handleMenuTypeChange}
+            className="block w-full px-2.5 pb-2.5 pt-4 text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
+            defaultValue="" // Sets default selected option
+          >
+            <option value="" disabled>
+              Select Type of Menu
+            </option>
+            <option value="Buffet Type">Buffet Type</option>
+            <option value="Packed Meals">Packed Meals</option>
+            <option value="Cocktail Type">Cocktail Type</option>
+           
+          </select>
+
+          <label
+            htmlFor="countries"
+            className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
+          >
+            Type of Menu
+          </label>
+        </div>
+
+        <div className="relative bg-inherit mt-4">
+          <textarea
+            id="deliveryNote"
+            rows="4"
+            className="peer text-xs bg-transparent h-32 w-full rounded-lg text-black placeholder:text-xs placeholder-transparent ring-2 px-2 ring-gray-400 focus:ring-black focus:outline-none focus:border-black"
+            placeholder="Write something..."
+          ></textarea>
+          <label
+            htmlFor="deliveryNote"
+            className="absolute start-2 text-xs cursor-text left-1 -top-2.5 text-gray-400 bg-gray-50 px-1 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-placeholder-shown:top-2 peer-focus:-top-2.5 peer-focus:text-black peer-focus:text-xs transition-all "
+          >
+            Please provide any specific dietary requirements or preferences
+          </label>
+        </div>
+        
+
+        <button
+          onClick={handleMenuToggleModal}
+          className="block text-white bg-prime hover:bg-orange-800 focus:ring-4 focus:outline-none focus:ring-gray-300 my-4 font-medium rounded-lg text-sm px-5 py-2.5 text-center "
+        >
+          SHOW MENU
+        </button>
+
+        <MenuModal 
+        showMenuModal={showMenuModal} 
+        handleMenuToggleModal={handleMenuToggleModal}
+        menuItems={menu} 
+        selectedMenuType={selectedMenuType}
+      />
+        
         <div className="flex justify-end mt-4">
           <button
             type="submit"

@@ -53,7 +53,7 @@ header, nav{
 }
 
 .footer-title{
-  color: white !important;
+  color: white ;
 }
 
 .active{
@@ -156,3 +156,9 @@ input[type="number"] {
     font-size: 2rem;
     font-weight: bold;
   }
+
+  .swal-custom-zindex {
+    z-index: 10000 !important; /* Adjust this based on your modal z-index */
+  }
+
+ 
