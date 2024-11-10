@@ -25,6 +25,7 @@ import AddVoucher from "../pages/dashboard/admin/AddVoucher";
 import ManageVouchers from "../pages/dashboard/admin/ManageVouchers";
 import UpdateVoucher from "../pages/dashboard/admin/UpdateVoucher";
 import OnlineBooking from "../pages/bookPage/OnlineBooking"
+import AddPackage from "../pages/dashboard/admin/AddPackage";
 const router = createBrowserRouter([
     {
       path: "/",
@@ -108,6 +109,10 @@ const router = createBrowserRouter([
         {
           path: 'add-voucher',
           element: <AddVoucher/>
+        },
+        {
+          path: 'add-package',
+          element: <AddPackage/>
         },
         {
           path: "manage-items",

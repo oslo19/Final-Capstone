@@ -16,7 +16,7 @@ const Cards = ({ item}) => {
   return (
    
     
-    <div className="max-w-sm mr-5 md:my-5 bg-gradient-to-r from-gray-800 via-gray-900 to-gray-900 md:min-h- border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+    <div className="max-w-sm z-50  mr-5 md:my-5 bg-gradient-to-r from-gray-800 via-gray-900 to-gray-900 md:min-h- border-gray-200 rounded-lg shadow">
     <Link to={`/products/${item._id}`}>
         <img className="p-8 rounded-t-lg hover:scale-105 transition-all duration-300 md:h-72" src={item.image} alt="product image" />
     </Link>

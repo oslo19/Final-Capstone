@@ -56,7 +56,7 @@ const EventRental = () => {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
-    <section className='mx-64 bg-gradient-to-r from-gray-900 via-gray-900  border-gray-200 rounded-lg shadow'>
+    <section className='max-w-4xl mx-auto bg-gradient-to-r from-gray-900 via-gray-900  border-gray-200 rounded-lg shadow'>
       {/* Container */}
       <div className="mx-auto w-full px-5 py-16 md:px-10 md:py-24 text-white hover:text-orange">
         {/* Component */}
@@ -82,7 +82,7 @@ const EventRental = () => {
                 {/* Categories */}
                 <div className="flex flex-col gap-6 ">
                   <p className="font-semibold">Categories</p>
-                  <div className="flex flex-wrap items-center gap-2 categories">
+                  <div className="flex flex-col items-start categories">
                     <a 
                     href="#" 
                     onClick={showAll}
@@ -186,7 +186,9 @@ const EventRental = () => {
                 <div className="mb-6 mt-6 h-px w-full bg-[#d9d9d9]"></div>
               
               </form>
+              
             </div>
+            
             {/* Decor */}
             <div className="w-full">
               {/* Pagination */}
@@ -205,7 +207,7 @@ const EventRental = () => {
 
                  {/* Rental card */}
              
-              <div className="flex flex-wrap ">
+              <div className="flex flex-wrap w-auto h-auto">
                 {currentItems.map((item, index) => (
                   <RentalCards key={index} item={item} />
                 ))}

@@ -9,17 +9,17 @@ const getAllMenuItems = async(req, res) => {
     }
 }
 
-// post a new menu item
-const postMenuItem = async(req, res) => {
-    const newItem = req.body;
+const postMenuItem = async (req, res) => {
+    const { menuItemId, name, recipe, image, category, quantity, price, menuTypes } = req.body;
+    const newItem = { menuItemId, name, recipe, image, category, quantity, price, menuTypes };
     try {
         const result = await Menu.create(newItem);
-        res.status(200).json(result)
-        
+        res.status(200).json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 // delete a menu item
 const deleteMenuItem = async(req, res) => {
