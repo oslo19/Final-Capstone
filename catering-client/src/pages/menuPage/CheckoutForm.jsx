@@ -219,7 +219,7 @@ const CheckoutForm = () => {
 
   return (
     <>
-      <div className="max-w-screen-2xl container px-4 mt-36">
+      <div className="max-w-screen-2xl container px-4">
         <div className="flex flex-col md:flex-row-reverse items-start justify-between">
           {/* Order Summary */}
           <div className="md:w-1/3 mr-28">
