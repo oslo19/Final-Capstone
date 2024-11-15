@@ -1,55 +1,47 @@
 import React, { useContext, useEffect, useState } from "react";
 import CartPopover from "./CartPopover";
-import useCart from "../hooks/useCart";
 import { AuthContext } from "../contexts/AuthProvider";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
-import useBookingCart from "../hooks/useBookingCart";
+import RentalCartPopover from "./RentalCartPopover";
+import useBookingRentalCart from "../hooks/useBookingRentalCart";
 
-const MenuModal = ({
-  showMenuModal,
-  handleMenuToggleModal,
-  menuItems,
+const AmenitiesModal = ({
   selectedMenuType,
+  handleAmenitiesToggleModal,
+  showAmenitiesModal,
+  rentalItems,
 }) => {
   const { user } = useContext(AuthContext);
   const { id } = useParams();
-  const [isCartPopoverVisible, setCartPopoverVisible] = useState(false);
-  const [bookingCart, refetch] = useBookingCart();
-  const [priceRange, setPriceRange] = useState(500);
-  const [maxBudget, setMaxBudget] = useState(1000);
+  const [isBookingRentalCartPopoverVisible, setBookingRentalCartPopoverVisible] = useState(false);
+  const [bookingRentalCart, refetch] = useBookingRentalCart(); 
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [filteredItems, setFilteredItems] = useState(menuItems);
+  const [filteredItems, setFilteredItems] = useState(rentalItems);
 
   useEffect(() => {
-    if (!showMenuModal) {
-      setSelectedCategory("all");
-    }
-  }, [showMenuModal]);
-  
-  useEffect(() => {
-    if (showMenuModal) {
+    if (showAmenitiesModal) {
       document.body.classList.add("overflow-hidden");
+      setFilteredItems(rentalItems);
     } else {
       document.body.classList.remove("overflow-hidden");
     }
-  }, [showMenuModal]);
+  }, [showAmenitiesModal, rentalItems]);
 
   const filterItems = (category) => {
     const filtered =
-      category === "all" ? menuItems : menuItems.filter((item) => item.category.toLowerCase() === category.toLowerCase());
+      category === "all"
+        ? rentalItems
+        : rentalItems.filter((item) => item.category.toLowerCase() === category.toLowerCase());
     setFilteredItems(filtered);
   };
 
-  // Update filteredItems whenever selectedCategory changes
   useEffect(() => {
     filterItems(selectedCategory);
-  }, [selectedCategory, menuItems]);
+  }, [selectedCategory, rentalItems]);
 
-  if (!showMenuModal) return null;
-
- 
+  if (!showAmenitiesModal) return null;
 
   const handleCategoryChange = (event) => {
     setSelectedCategory(event.target.value);
@@ -57,37 +49,27 @@ const MenuModal = ({
 
   const handleAddToCart = (item) => {
     const newTotal = orderTotal + item.price;
-    
-    if (newTotal > maxBudget) {
-      Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: `Adding this item would exceed your budget of ₱${maxBudget}.`,
-        showConfirmButton: false,
-        timer: 1500,
-      });
-      return;
-    }
-  
+
+
     if (user && user.email) {
-      const bookingItem = {
+      const rentalItem = {
         email: user.email,
-        bookingItemId: item._id,
+        rentalItemId: item._id,
         name: item.name,
         price: item.price,
         quantity: 1,
         image: item.image,
       };
-  
+
       axios
-        .post("http://localhost:6001/booking-cart", bookingItem)
+        .post("http://localhost:6001/booking-rental-cart", rentalItem)
         .then((response) => {
           if (response) {
             refetch();
             Swal.fire({
               position: "center",
               icon: "success",
-              title: "Food added to the cart.",
+              title: "Rental item added to the cart.",
               showConfirmButton: false,
               timer: 1500,
             });
@@ -104,7 +86,7 @@ const MenuModal = ({
         });
     } else {
       Swal.fire({
-        title: "Please login to order the food",
+        title: "Please login to rent this item",
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
@@ -118,100 +100,41 @@ const MenuModal = ({
     }
   };
 
-  const cartSubtotal = bookingCart.reduce(
+  const cartSubtotal = bookingRentalCart.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
   const orderTotal = cartSubtotal;
 
   const toggleCartPopover = () => {
-    setCartPopoverVisible((prev) => !prev);
+    setBookingRentalCartPopoverVisible((prev) => !prev);
   };
 
   const handleConfirm = () => {
-    onConfirm(bookingCart); // Pass bookingCart data to parent
-    handleMenuToggleModal(); // Close the modal
+    onConfirm(bookingRentalCart);
+    handleAmenitiesToggleModal();
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl w-[90%] h-[90%] m-4 overflow-hidden z-50 mt-9">
         <h3 className="text-2xl leading-6 font-medium text-gray-900 text-center">
-          Menu Order
+          Rental Items
         </h3>
-        <div className="flex justify-between px-6 py-4 border-b border-gray-200">
-          {/* Budget Range Slider */}
-          <div className="p-4 w-96">
-            <label htmlFor="price-range" className="block text-sm font-medium text-gray-700">Budget Range</label>
-            <input
-              type="range"
-              id="price-range"
-              className="w-full accent-indigo-600"
-              min="0"
-              max={maxBudget}
-              value={priceRange}
-              onChange={(e) => setPriceRange(e.target.value)}
-            />
-            <div className="flex justify-between text-sm text-gray-500">
-              <span>₱{priceRange}</span>
-              <span>₱{maxBudget}</span>
-            </div>
-            <label htmlFor="max-budget" className="block text-sm font-medium text-gray-700 mt-1">Estimated Budget</label>
-            <input
-              type="number"
-              id="max-budget"
-              className="w-full p-1 border rounded-md text-sm text-gray-700"
-              min="0"
-              value={maxBudget}
-              onChange={(e) => setMaxBudget(Number(e.target.value))}
-            />
-          </div>
-
-          {/* Filter Section */}
-          <div className="flex items-end mr-40">
-            <select className="select w-full max-w-xs" onChange={handleCategoryChange}>
-              <option value="all">All</option>
-              <option value="appetizers">Appetizer</option>
-              <option value="pork">Pork</option>
-              <option value="chicken">Chicken</option>
-              <option value="seafoods">Seafoods</option>
-              <option value="beef">Beef</option>
-              <option value="noodles">Noodles/Pasta</option>
-              <option value="vegies">Vegies/Others</option>
-              <option value="dessert">Dessert</option>
-              <option value="rice">Rice</option>
-            </select>
-          </div>
-
-          <div className="px-6 py-4 max-w-md">
-            <h4 className="text-lg font-semibold text-gray-900">Selected Menu Type</h4>
-            <p className="text-gray-700 text-base mb-4">
-              {selectedMenuType || "No menu type selected"}
-            </p>
-            {selectedMenuType === "Buffet Type" && (
-              <div><h5 className="font-bold">BUFFET TYPE SERVICES:</h5>
-              <p>
-              Our Buffet Type service offers a delicious variety of dishes,
-              perfect for gatherings where guests can enjoy a relaxed,
-              self-serve dining experience. Ideal for weddings, family
-              events, and social occasions.
-              </p></div>
-            )}
-            {selectedMenuType === "Packed Meals" && (
-              <div><h5 className="font-bold">PACKED MEAL</h5><p>Packed in a styrofoam, spoon, fork, and toothpick included.</p></div>
-            )}
-            {selectedMenuType === "Cocktail Type" && (
-              <div><h5 className="font-bold">COCKTAIL TYPE SERVICE</h5>
-              <p>
-                Business meetings, company launching, event opening, VIP
-                gatherings, and other functions may avail of our
-                well-personalized customer cocktail party service.
-              </p></div>
-            )}
-          </div>
+        
+        {/* Filter Section */}
+        <div className="flex items-end mr-40">
+          <select className="select w-full max-w-xs" onChange={handleCategoryChange}>
+            <option value="all">All</option>
+            <option value="tent">Tent</option>
+            <option value="tables">Tables</option>
+            <option value="seating">Seating</option>
+            <option value="linean">Linean & Napkins</option>
+            {/* Add other rental categories here */}
+          </select>
         </div>
 
-        {/* Menu Items */}
+        {/* Rental Items */}
         <div className="prose p-6 overflow-y-auto" style={{ maxHeight: "50vh" }}>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {filteredItems.map((item, index) => (
@@ -239,7 +162,7 @@ const MenuModal = ({
           <label
             tabIndex={0}
             onClick={toggleCartPopover}
-            className="btn btn-ghost btn-circle  lg:flex items-center justify-center mr-3"
+            className="btn btn-ghost btn-circle lg:flex items-center justify-center mr-3"
           >
             <div className="indicator">
               <svg
@@ -257,26 +180,24 @@ const MenuModal = ({
                 />
               </svg>
               <span className="badge badge-sm indicator-item">
-                {bookingCart.length || 0}
+                {bookingRentalCart.length || 0}
               </span>
             </div>
           </label>
 
           <dl className="flex items-center justify-between gap-4 pt-2">
             <dt className="text-xl font-bold text-gray-900 dark:text-white">
-              Total ({bookingCart.length} item)
+              Total ({bookingRentalCart.length} item)
             </dt>
             <dd className="text-2xl font-bold text-gray-900 dark:text-white">
               ₱{orderTotal.toFixed(2)}
             </dd>
           </dl>
 
-          {/* CartPopover */}
-          <CartPopover isVisible={isCartPopoverVisible} />
+          <RentalCartPopover isVisible={isBookingRentalCartPopoverVisible} />
 
-          {/*Confirm Button */}
           <button
-            onClick={handleMenuToggleModal}
+            onClick={handleAmenitiesToggleModal}
             type="button"
             className="inline-flex justify-center rounded-md border shadow-sm px-4 py-3 bg-black text-white font-medium text-sm"
           >
@@ -288,4 +209,4 @@ const MenuModal = ({
   );
 };
 
-export default MenuModal;
+export default AmenitiesModal;

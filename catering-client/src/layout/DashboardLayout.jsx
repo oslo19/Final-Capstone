@@ -105,6 +105,12 @@ const DashboardLayout = () => {
             </Link>
           </li>
           <li>
+            <Link to="/dashboard/add-venue">
+              <FaPlusCircle />
+              Add Venue
+            </Link>
+          </li>
+          <li>
             <Link to="/dashboard/add-voucher">
               <FaPlusCircle />
               Add Voucher
@@ -118,6 +124,11 @@ const DashboardLayout = () => {
           <li>
             <Link to="/dashboard/manage-rentals">
               <FaEdit /> Manage Rentals
+            </Link>
+          </li>
+          <li>
+            <Link to="/dashboard/manage-venues">
+              <FaEdit /> Manage Venues
             </Link>
           </li>
           <li>
