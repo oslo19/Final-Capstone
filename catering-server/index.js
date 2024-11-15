@@ -41,9 +41,11 @@ const cartRoutes = require('./api/routes/cartRoutes');
 const userRoutes = require('./api/routes/userRoutes');
 const paymentRoutes = require('./api/routes/paymentRoutes');
 const rentalRoutes = require('./api/routes/rentalRoutes');
+const venueRoutes = require('./api/routes/venueRoutes');
 const voucherRoutes = require('./api/routes/voucherRoutes');
 const otpRoutes = require('./api/routes/otpRoutes');
 const bookingCartRoutes = require('./api/routes/bookingCartRoutes');
+const bookingRentalCartRoutes = require('./api/routes/bookingRentalCartRoutes');
 const packageRoutes = require('./api/routes/packageRoutes');
 app.use('/menu', menuRoutes)
 app.use('/carts', cartRoutes);
@@ -53,7 +55,10 @@ app.use('/rental', rentalRoutes);
 app.use('/voucher', voucherRoutes);
 app.use('/otp', otpRoutes);
 app.use('/booking-cart', bookingCartRoutes);
+app.use('/booking-rental-cart', bookingRentalCartRoutes);
 app.use('/packages', packageRoutes);
+app.use('/venues', venueRoutes);
+
 
 
 

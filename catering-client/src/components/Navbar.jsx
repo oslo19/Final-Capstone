@@ -47,6 +47,9 @@ const Navbar = () => {
       <li tabIndex={0}>
         <a href="/rental" className="hover:text-prime">Event Rental</a>
       </li>
+      <li tabIndex={0}>
+        <a href="/venue" className="hover:text-prime">Venue</a>
+      </li>
       {user && (
       <li tabIndex={0}>
         <a href="/book" className=" hover:text-prime">Book now</a>

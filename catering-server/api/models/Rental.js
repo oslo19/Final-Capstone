@@ -16,7 +16,7 @@ const rentalSchema = new Schema({
     quantity: Number,
     price: Number,
     days: {
-        type: Number, // Number of rental days
+        type: Number, 
         default: 1,
     },
     createdAt: {
