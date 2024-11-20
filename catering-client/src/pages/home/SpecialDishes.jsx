@@ -6,7 +6,7 @@ import Slider from "react-slick";
 import { FaHeart} from "react-icons/fa"
 import Cards from "../../components/Cards";
 import { FaAngleRight, FaAngleLeft  } from "react-icons/fa6";
-
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const SampleNextArrow = (props) => {
   const { className, style, onClick } = props;
   return (
@@ -41,7 +41,7 @@ const SpecialDishes = () => {
     // Fetch data from the backend
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:6001/menu");
+        const response = await fetch(`${BASE_URL}/menu`);
         const data = await response.json();
         setMenu(data);
       } catch (error) {
