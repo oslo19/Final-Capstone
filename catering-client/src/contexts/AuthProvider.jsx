@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useEffect } from 'react';
 import app from '../firebase/firebase.config';
 import axios from 'axios';
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 export const AuthContext = createContext();
 const auth = getAuth(app);
@@ -54,7 +55,7 @@ const AuthProvider = ({children}) => {
             setUser(currentUser);
             if(currentUser){
                 const userInfo ={email: currentUser.email}
-                axios.post('http://localhost:6001/jwt', userInfo)
+                axios.post(`${BASE_URL}/jwt`, userInfo)
                   .then( (response) => {
                     // console.log(response.data.token);
                     if(response.data.token){    
