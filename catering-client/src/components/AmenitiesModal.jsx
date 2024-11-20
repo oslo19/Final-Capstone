@@ -12,6 +12,7 @@ const AmenitiesModal = ({
   handleAmenitiesToggleModal,
   showAmenitiesModal,
   rentalItems,
+  pax,
 }) => {
   const { user } = useContext(AuthContext);
   const { id } = useParams();
@@ -19,7 +20,40 @@ const AmenitiesModal = ({
   const [bookingRentalCart, refetch] = useBookingRentalCart(); 
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [filteredItems, setFilteredItems] = useState(rentalItems);
+  const [hasAddedToCart, setHasAddedToCart] = useState(false);
 
+  
+  useEffect(() => {
+    if (showAmenitiesModal && !hasAddedToCart && rentalItems.length > 0) {
+      rentalItems.forEach((item) => {
+        const quantity = calculateQuantity(item, pax);
+
+        // Check if item already exists in the cart
+        const isInCart = bookingRentalCart.some(
+          (cartItem) => cartItem.rentalItemId === item._id
+        );
+
+        if (!isInCart && quantity > 0) {
+          axios
+            .post("http://localhost:6001/booking-rental-cart", {
+              email: user.email,
+              rentalItemId: item._id,
+              name: item.name,
+              price: item.price,
+              quantity: quantity,
+              image: item.image,
+            })
+            .then(() => refetch())
+            .catch((error) => console.error(error));
+        }
+      });
+
+      // Mark items as added
+      setHasAddedToCart(true);
+    }
+  }, [showAmenitiesModal, rentalItems, pax, bookingRentalCart, hasAddedToCart, refetch]);
+
+  
   useEffect(() => {
     if (showAmenitiesModal) {
       document.body.classList.add("overflow-hidden");
@@ -48,19 +82,20 @@ const AmenitiesModal = ({
   };
 
   const handleAddToCart = (item) => {
-    const newTotal = orderTotal + item.price;
-
-
+    const quantity = calculateQuantity(item, pax); // Calculate quantity based on pax
+    const totalPrice = item.price * quantity;
+  
     if (user && user.email) {
       const rentalItem = {
         email: user.email,
         rentalItemId: item._id,
         name: item.name,
         price: item.price,
-        quantity: 1,
+        quantity: quantity,
+        totalPrice: totalPrice,
         image: item.image,
       };
-
+  
       axios
         .post("http://localhost:6001/booking-rental-cart", rentalItem)
         .then((response) => {
@@ -69,7 +104,7 @@ const AmenitiesModal = ({
             Swal.fire({
               position: "center",
               icon: "success",
-              title: "Rental item added to the cart.",
+              title: `${item.name} added to the cart with quantity: ${quantity}`,
               showConfirmButton: false,
               timer: 1500,
             });
@@ -115,6 +150,34 @@ const AmenitiesModal = ({
     handleAmenitiesToggleModal();
   };
 
+
+  const calculateQuantity = (item, pax) => {
+    switch (item.name) {
+      case "CHAIR":
+        return pax; // 1 chair per person
+      case "Tables":
+        return Math.ceil(pax / 10); // 1 table per 10 pax
+      case "Tent (10x10 ft)":
+        return Math.ceil(pax / 20); // 1 tent per 20 pax
+      case "Buffet Setup":
+        return 1; // Fixed quantity
+      case "Plate/Utensils":
+        return pax; // 1 plate and utensil per person
+      case "Glasses":
+        return pax; // 1 glass per person
+      case "Linens (Tables)":
+        return Math.ceil(pax / 10); // 1 linen per table
+      case "Centerpieces":
+        return Math.ceil(pax / 10); // 1 centerpiece per table
+      default:
+        console.warn(`Unmatched item name: ${item.name}`);
+        return 0; // Default quantity is 0 for unmatched items
+    }
+  };
+  
+
+  
+  
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl w-[90%] h-[90%] m-4 overflow-hidden z-50 mt-9">

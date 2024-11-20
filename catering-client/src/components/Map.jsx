@@ -1,43 +1,59 @@
-import React, { useEffect, useRef } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-
-const defaultCenter = [37.7749, -122.4194]; // San Francisco coordinates
-
-const isValidCoordinates = (coords) => {
-  return (
-    Array.isArray(coords) &&
-    coords.length === 2 &&
-    coords.every((value) => typeof value === 'number')
-  );
-};
+import React, { useEffect, useRef } from "react";
 
 const Map = ({ center }) => {
   const mapRef = useRef(null);
   const markerRef = useRef(null);
 
-  const validCenter = isValidCoordinates(center) ? center : defaultCenter;
+  const defaultCenter = { lat: 10.239613, lng: 123.780381 }; // Default location
+  const validCenter =
+    center && center.length === 2
+      ? { lat: center[0], lng: center[1] }
+      : defaultCenter;
 
-  useEffect(() => {
+  const initializeMap = () => {
+    if (!window.google || !window.google.maps) {
+      console.error("Google Maps API is not loaded.");
+      return;
+    }
+
     if (!mapRef.current) {
-      mapRef.current = L.map('map').setView(validCenter, 15);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-      }).addTo(mapRef.current);
+      mapRef.current = new window.google.maps.Map(
+        document.getElementById("map"),
+        {
+          center: validCenter,
+          zoom: 15,
+        }
+      );
     }
 
     if (markerRef.current) {
-      markerRef.current.setLatLng(validCenter);
+      markerRef.current.setPosition(validCenter);
     } else {
-      markerRef.current = L.marker(validCenter).addTo(mapRef.current);
+      markerRef.current = new window.google.maps.Marker({
+        position: validCenter,
+        map: mapRef.current,
+      });
     }
 
-    mapRef.current.setView(validCenter, 15);
+    mapRef.current.setCenter(validCenter);
+  };
+
+  useEffect(() => {
+    if (!window.google || !window.google.maps) {
+      const checkGoogleMaps = setInterval(() => {
+        if (window.google && window.google.maps) {
+          clearInterval(checkGoogleMaps); // Stop checking once loaded
+          initializeMap();
+        }
+      }, 100); // Check every 100ms
+
+      return () => clearInterval(checkGoogleMaps); // Cleanup interval on unmount
+    } else {
+      initializeMap();
+    }
   }, [validCenter]);
 
-  return (
-    <div id="map" style={{ height: '300px', width: '100%', zIndex: '1' }}></div>
-  );
+  return <div id="map" style={{ height: "300px", width: "100%" }}></div>;
 };
 
 export default Map;

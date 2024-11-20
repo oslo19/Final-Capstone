@@ -17,44 +17,62 @@ const UpdateRental = () => {
 
     const navigate = useNavigate()
   
-    // image hosting key
-    const image_hosting_key = import.meta.env.VITE_IMAGE_HOSTING_KEY;
-    // console.log(image_hosting_key)
-    const image_hosting_api = `https://api.imgbb.com/1/upload?key=${image_hosting_key}`;
+    const cloudinaryUploadUrl = `https://api.cloudinary.com/v1_1/dtg6ofu1q/image/upload`;
+    const uploadPreset = "unsigned_preset";
     const onSubmit = async (data) => {
-      // console.log(data)
-      const imageFile = { image: data.image[0] };
-      const hostingImg = await axiosPublic.post(image_hosting_api, imageFile, {
-        headers: {
-          "content-type": "multipart/form-data",
-        },
-      });
-      // console.log(hostingImg.data)
-      if (hostingImg.data.success) {
-        const rentalItem = {
-          name: data.name,
-          category: data.category,
-          price: parseFloat(data.price), 
-          recipe: data.recipe,
-          image: hostingImg.data.data.display_url
-        };
-  
-        // console.log(rentalItem);
-        const postRentalItem = axiosSecure.patch(`/rental/${item._id}`, rentalItem);
-        if(postRentalItem){
-          reset()
-          Swal.fire({
-            position: "top-end",
-            icon: "success",
-            title: "Your item updated successfully!",
-            showConfirmButton: false,
-            timer: 1500
-          });
-          navigate("/dashboard/manage-rentals")
-          refetch();
+      try {
+        // Prepare the FormData object
+        const formData = new FormData();
+        formData.append("file", data.image[0]); // Attach the image file
+        formData.append("upload_preset", uploadPreset); // Use your unsigned preset name
+    
+        // Upload the image to Cloudinary
+        const response = await fetch(cloudinaryUploadUrl, {
+          method: "POST",
+          body: formData,
+        });
+    
+        const jsonResponse = await response.json();
+    
+        if (response.ok) {
+          // Prepare the rental item object with the uploaded image URL
+          const rentalItem = {
+            name: data.name,
+            category: data.category,
+            price: parseFloat(data.price),
+            recipe: data.recipe,
+            image: jsonResponse.secure_url, // Save the secure URL of the uploaded image
+          };
+    
+          // Send the rental item data to your server
+          const updateResponse = await axiosSecure.patch(`/rental/${item._id}`, rentalItem);
+    
+          if (updateResponse.status === 200) {
+            reset();
+            Swal.fire({
+              position: "top-end",
+              icon: "success",
+              title: "Your item updated successfully!",
+              showConfirmButton: false,
+              timer: 1500,
+            });
+    
+            navigate("/dashboard/manage-rentals");
+            refetch();
+          }
+        } else {
+          throw new Error(jsonResponse.error.message || "Image upload failed.");
         }
+      } catch (error) {
+        console.error("Error updating rental item:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "Something went wrong. Please try again.",
+        });
       }
     };
+    
   return (
     <div className="w-full md:w-[870px] px-4 mx-auto">
       <h2 className="text-2xl font-semibold my-4">

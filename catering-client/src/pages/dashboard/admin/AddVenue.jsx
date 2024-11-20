@@ -3,7 +3,7 @@ import { FaBuilding } from "react-icons/fa";
 import { useForm } from "react-hook-form";
 import useAxiosPublic from "../../../hooks/useAxiosPublic";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 
 const AddVenue = () => {
   const { register, handleSubmit, reset } = useForm();
@@ -20,12 +20,9 @@ const AddVenue = () => {
 
     // Upload all images to image hosting
     for (let i = 0; i < imageFiles.length; i++) {
-      const imageFile = { image: imageFiles[i] };
-      const hostingImg = await axiosPublic.post(image_hosting_api, imageFile, {
-        headers: {
-          "content-type": "multipart/form-data",
-        },
-      });
+      const formData = new FormData();
+      formData.append("image", imageFiles[i]);
+      const hostingImg = await axiosPublic.post(image_hosting_api, formData);
 
       if (hostingImg.data.success) {
         uploadedImages.push(hostingImg.data.data.display_url);
@@ -44,7 +41,7 @@ const AddVenue = () => {
       };
 
       // Post the venue data
-      const postVenue = await axiosSecure.post('/venues', venueData);
+      const postVenue = await axiosSecure.post("/venues", venueData);
 
       if (postVenue) {
         reset();
@@ -95,11 +92,11 @@ const AddVenue = () => {
                 <option disabled value="default">
                   Select a venue type
                 </option>
-                <option value="conference">Conference</option>
-                <option value="event">Event Space</option>
-                <option value="outdoor">Outdoor Park</option>
-                <option value="wedding">Wedding Venue</option>
-                <option value="studio">Studio</option>
+                <option value="Conference">Conference</option>
+                <option value="Event Space">Event Space</option>
+                <option value="Outdoor Park">Outdoor Park</option>
+                <option value="Wedding Venue">Wedding Venue</option>
+                <option value="Studio">Studio</option>
               </select>
             </div>
 

@@ -185,9 +185,6 @@ const Signup = () => {
           <button className="btn btn-circle hover:bg-prime hover:text-white">
             <FaFacebookF />
           </button>
-          <button className="btn btn-circle hover:bg-prime hover:text-white">
-            <FaGithub />
-          </button>
         </div>
       </div>
     </div>

@@ -96,9 +96,6 @@ const Menu = () => {
               Greek Salad, Lasagne, Butternut Pumpkin, Tokusen Wagyu, Olivas
               Rellenas and more for a moderate cost
             </p>
-            <button className="bg-prime font-semibold btn text-white px-8 py-3 rounded-full">
-              Order Now
-            </button>
           </div>
         </div>
       </div>

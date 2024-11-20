@@ -14,20 +14,21 @@ const RentalCartPopover = ({ isVisible }) => {
 
   const calculateTotalPrice = (item) => item.price * item.quantity;
 
-  const handleIncrease = async (item) => {
+  const handleUpdateQuantity = async (item, quantity) => {
+    if (quantity <= 0) {
+      handleDelete(item);
+      return;
+    }
+
     try {
-      const response = await fetch(
+      const response = await axios.put(
         `http://localhost:6001/booking-rental-cart/${item._id}`,
         {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ quantity: item.quantity + 1 }),
+          quantity,
         }
       );
 
-      if (response.ok) {
+      if (response.status === 200) {
         await refetch();
       } else {
         console.error("Failed to update quantity");
@@ -37,57 +38,54 @@ const RentalCartPopover = ({ isVisible }) => {
     }
   };
 
-  const handleDecrease = async (item) => {
-    if (item.quantity > 1) {
-      try {
-        const response = await fetch(
-          `http://localhost:6001/booking-rental-cart/${item._id}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ quantity: item.quantity - 1 }),
-          }
-        );
-
-        if (response.ok) {
-          await refetch();
-        } else {
-          console.error("Failed to update quantity");
-        }
-      } catch (error) {
-        console.error("Error updating quantity:", error);
-      }
-    } else {
-      handleDelete(item);
-    }
-  };
-
   const handleDelete = (item) => {
     Swal.fire({
       title: "Are you sure?",
-      text: "You won't be able to revert this!",
+      text: "This item will be removed from the cart!",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
       confirmButtonText: "Yes, delete it!",
-      customClass: {
-        popup: "swal-custom-zindex",
-      },
     }).then((result) => {
       if (result.isConfirmed) {
         axios
           .delete(`http://localhost:6001/booking-rental-cart/${item._id}`)
           .then((response) => {
-            if (response) {
+            if (response.status === 200) {
               refetch();
-              Swal.fire("Deleted!", "Your item has been deleted.", "success");
+              Swal.fire("Deleted!", "Item has been removed.", "success");
             }
           })
           .catch((error) => {
-            console.error(error);
+            console.error("Error deleting item:", error);
+          });
+      }
+    });
+  };
+
+  const handleClearAll = () => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "This will remove all items from the cart!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, clear all!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Promise.all(
+          bookingRentalCart.map((item) =>
+            axios.delete(`http://localhost:6001/booking-rental-cart/${item._id}`)
+          )
+        )
+          .then(() => {
+            refetch();
+            Swal.fire("Cleared!", "All items have been removed.", "success");
+          })
+          .catch((error) => {
+            console.error("Error clearing cart:", error);
           });
       }
     });
@@ -95,6 +93,15 @@ const RentalCartPopover = ({ isVisible }) => {
 
   return (
     <div className="absolute bottom-[75px] left-[0px] z-10 w-80 p-2 bg-white border rounded-lg shadow-lg">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-lg font-semibold">Your Cart</h3>
+        <button
+          onClick={handleClearAll}
+          className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
+        >
+          Clear Items
+        </button>
+      </div>
       {bookingRentalCart.length > 0 ? (
         <div className="flex flex-col space-y-2">
           {bookingRentalCart.map((item) => (
@@ -112,63 +119,48 @@ const RentalCartPopover = ({ isVisible }) => {
                 >
                   {item.name}
                 </a>
-                {item.isRental && item.rentalDays && (
-                  <span className="text-gray-600">
-                    rent for {item.rentalDays} day(s)
-                  </span>
-                )}
+                <div className="flex items-center mt-1">
+                  <input
+                    type="number"
+                    min="1"
+                    value={item.quantity}
+                    onChange={(e) =>
+                      handleUpdateQuantity(item, parseInt(e.target.value, 10))
+                    }
+                    className="w-12 text-center text-gray-900 border border-gray-300 rounded-md focus:outline-none"
+                  />
+                  <p className="ml-2 text-sm">₱{item.price} each</p>
+                </div>
               </div>
-              <div className="flex items-center justify-center space-x-1">
+              <div className="flex items-center ml-2">
+                <p className="text-xs font-bold text-gray-900 ml-2">
+                  ₱{calculateTotalPrice(item).toFixed(2)}
+                </p>
                 <button
-                  type="button"
-                  className="flex items-center justify-center h-6 w-6 text-gray-900 bg-gray-100 border rounded hover:bg-gray-200"
-                  onClick={() => handleDecrease(item)}
+                  onClick={() => handleDelete(item)}
+                  className="ml-3 text-red-500 hover:text-red-700"
                 >
                   <svg
-                    className="h-3 w-3"
                     xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
                     fill="none"
-                    viewBox="0 0 18 2"
-                  >
-                    <path stroke="currentColor" strokeWidth="2" d="M1 1h16" />
-                  </svg>
-                </button>
-
-                <input
-                  type="text"
-                  className="w-10 bg-transparent text-center text-xs text-gray-900 border-none focus:outline-none"
-                  value={item.quantity}
-                  readOnly
-                />
-
-                <button
-                  type="button"
-                  className="flex items-center justify-center h-6 w-6 text-gray-900 bg-gray-100 border rounded hover:bg-gray-200"
-                  onClick={() => handleIncrease(item)}
-                >
-                  <svg
-                    className="h-3 w-3"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 18 18"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
                     <path
-                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                       strokeWidth="2"
-                      d="M9 1v16M1 9h16"
+                      d="M6 18L18 6M6 6l12 12"
                     />
                   </svg>
                 </button>
               </div>
-
-              <p className="text-xs font-bold text-gray-900 ml-2">
-                ₱{calculateTotalPrice(item).toFixed(2)}
-              </p>
             </div>
           ))}
         </div>
       ) : (
-        <div className="text-xs text-gray-600">No items in the cart</div>
+        <div className="text-xs text-gray-600 mt-4">No items in the cart</div>
       )}
     </div>
   );

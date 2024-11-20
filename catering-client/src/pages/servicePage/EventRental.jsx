@@ -180,7 +180,7 @@ const EventRental = () => {
                           ? "bg-gray-100 font-semibold"
                           : ""
                       } w-full border-b border-gray-400 p-3 hover:bg-gray-50`}
-                    >
+                      >
                       <p className="cursor-pointer w-full text-black hover:text-prime">
                         Glassware
                       </p>
@@ -261,6 +261,32 @@ const EventRental = () => {
                     >
                       <p className="cursor-pointer w-full text-black hover:text-prime">
                         Coolers & Beverage Dispensers
+                      </p>
+                    </a>
+                    <a
+                      href="#"
+                      onClick={() => filterItems("buffet")}
+                      className={`${
+                        selectedCategory === "buffet"
+                          ? "bg-gray-100 font-semibold"
+                          : ""
+                      } w-full p-3 hover:bg-gray-400`}
+                    >
+                      <p className="cursor-pointer w-full text-black hover:text-prime">
+                        Buffet Setup
+                      </p>
+                    </a>
+                    <a
+                      href="#"
+                      onClick={() => filterItems("centerpiece")}
+                      className={`${
+                        selectedCategory === "centerpiece"
+                          ? "bg-gray-100 font-semibold"
+                          : ""
+                      } w-full p-3 hover:bg-gray-400`}
+                    >
+                      <p className="cursor-pointer w-full text-black hover:text-prime">
+                      Centerpieces
                       </p>
                     </a>
                   </div>

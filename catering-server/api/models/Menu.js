@@ -16,7 +16,7 @@ const menuSchema = new Schema({
     price: Number,
     menuTypes: {
         type: [String],
-        enum: ["buffet", "packed meals", "cocktail"],
+        enum: ["buffet", "packed meals"],
         required: true
     },
     createdAt: {
