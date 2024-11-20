@@ -126,14 +126,6 @@ const AddMenu = () => {
                 />{" "}
                 Packed Meals
               </label>
-              <label>
-                <input
-                  type="checkbox"
-                  {...register("menuTypes")}
-                  value="cocktail"
-                />{" "}
-                Cocktail
-              </label>
             </div>
           </div>
 

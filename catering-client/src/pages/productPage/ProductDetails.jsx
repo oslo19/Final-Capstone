@@ -1,14 +1,16 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { useLoaderData, useLocation, useNavigate, useParams } from 'react-router-dom';
+import React, { useContext, useEffect, useState } from "react";
+import {
+  useLoaderData,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import Swal from "sweetalert2";
-import { AuthContext } from '../../contexts/AuthProvider';
-import axios from 'axios';
-import useProduct from '../../hooks/useProduct';
+import { AuthContext } from "../../contexts/AuthProvider";
+import axios from "axios";
+import useProduct from "../../hooks/useProduct";
 
-
-
-const ProductDetails = ({item}) => {
-
+const ProductDetails = ({ item }) => {
   const { user } = useContext(AuthContext);
   const { id } = useParams();
   const [product, loading, refetch] = useProduct(id);
@@ -17,20 +19,22 @@ const ProductDetails = ({item}) => {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
 
-
   useEffect(() => {
     const resetQuantity = async () => {
       // Ensure that product._id exists before making the API call
       if (product && product._id) {
         try {
-          await fetch(`http://localhost:6001/menu/reset-quantity/${product._id}`, {
-            method: 'PATCH',
-          });
+          await fetch(
+            `http://localhost:6001/menu/reset-quantity/${product._id}`,
+            {
+              method: "PATCH",
+            }
+          );
         } catch (error) {
-          console.error('Failed to reset quantity:', error);
+          console.error("Failed to reset quantity:", error);
         }
       } else {
-        console.error('Product or product._id is undefined');
+        console.error("Product or product._id is undefined");
       }
     };
 
@@ -38,8 +42,7 @@ const ProductDetails = ({item}) => {
     if (!loading && product && product._id) {
       resetQuantity();
     }
-  }, [loading, product]); 
-  
+  }, [loading, product]);
 
   const handleIncrease = async (item) => {
     if (isLoading) return; // Prevent multiple clicks during the request
@@ -55,21 +58,24 @@ const ProductDetails = ({item}) => {
     setProductItems(updatedProduct);
 
     try {
-      const response = await fetch(`http://localhost:6001/menu/${product._id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ quantity: product.quantity + 1 }),
-      });
+      const response = await fetch(
+        `http://localhost:6001/menu/${product._id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ quantity: product.quantity + 1 }),
+        }
+      );
 
       if (response.ok) {
         await refetch(); // Fetch updated data from server
       } else {
-        console.error('Failed to update quantity');
+        console.error("Failed to update quantity");
       }
     } catch (error) {
-      console.error('Error updating quantity:', error);
+      console.error("Error updating quantity:", error);
     } finally {
       setIsLoading(false); // Re-enable button
     }
@@ -89,82 +95,121 @@ const ProductDetails = ({item}) => {
     setProductItems(updatedProduct);
 
     try {
-      const response = await fetch(`http://localhost:6001/menu/${product._id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ quantity: product.quantity - 1 }),
-      });
+      const response = await fetch(
+        `http://localhost:6001/menu/${product._id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ quantity: product.quantity - 1 }),
+        }
+      );
 
       if (response.ok) {
         await refetch(); // Fetch updated data from server
       } else {
-        console.error('Failed to update quantity');
+        console.error("Failed to update quantity");
       }
     } catch (error) {
-      console.error('Error updating quantity:', error);
+      console.error("Error updating quantity:", error);
     } finally {
       setIsLoading(false); // Re-enable button
     }
   };
 
-  
-  const handleAddToCart =  (item) => {
-    if(user && user.email){
+  const handleAddToCart = (item) => {
+    if (user && user.email) {
       const cartItem = {
-        email: user.email, 
-        menuItemId: product._id, 
-        name: product.name, 
-        price: product.price, 
-        quantity: product.quantity, 
-        image: product.image, 
+        email: user.email,
+        menuItemId: product._id,
+        name: product.name,
+        price: product.price,
+        quantity: product.quantity,
+        image: product.image,
       };
 
-      axios.post('http://localhost:6001/carts', cartItem)
-      .then((response) => {
-        console.log(response);
-        if(response){
-          refetch(); // refetch cart
+      axios
+        .post("http://localhost:6001/carts", cartItem)
+        .then((response) => {
+          console.log(response);
+          if (response) {
+            refetch(); // refetch cart
             Swal.fire({
-                position: 'center',
-                icon: 'success',
-                title: 'Food added on the cart.',
-                showConfirmButton: false,
-                timer: 1500
-              })
-        }
-      })
-      .catch( (error) => {
-        console.log(error.response.data.message);
-        const errorMessage = error.response.data.message;
-        Swal.fire({
-          position: 'center',
-          icon: 'warning',
-          title: `${errorMessage}`,
-          showConfirmButton: false,
-          timer: 1500
-        })
-      });
-  }
-  else{
-      Swal.fire({
-          title: 'Please login to order the food',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#3085d6',
-          cancelButtonColor: '#d33',
-          confirmButtonText: 'Login now!'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            navigate('/login', {state: {from: location}})
+              position: "center",
+              icon: "success",
+              title: "Food added on the cart.",
+              showConfirmButton: false,
+              timer: 1500,
+            });
           }
         })
-  }
-}
+        .catch((error) => {
+          console.log(error.response.data.message);
+          const errorMessage = error.response.data.message;
+          Swal.fire({
+            position: "center",
+            icon: "warning",
+            title: `${errorMessage}`,
+            showConfirmButton: false,
+            timer: 1500,
+          });
+        });
+    } else {
+      Swal.fire({
+        title: "Please login to order the food",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Login now!",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate("/login", { state: { from: location } });
+        }
+      });
+    }
+  };
 
-  
- 
+  const handleInputChange = async (value) => {
+    const newQuantity = parseInt(value, 10);
+    // Validate input to ensure it is a positive number
+    if (isNaN(newQuantity) || newQuantity < 1) return;
+    try {
+      const response = await fetch(
+        `http://localhost:6001/menu/${product._id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ quantity: newQuantity }),
+        }
+      );
+
+      if (response.ok) {
+        await refetch(); // Fetch updated data from the server
+      } else {
+        console.error("Failed to update quantity");
+      }
+    } catch (error) {
+      console.error("Error updating quantity:", error);
+    }
+  };
+
+  const handleKeyDown = async (e) => {
+    if (e.key === "Backspace") {
+      let newQuantity = product.quantity.toString();
+      if (newQuantity.length > 1) {
+        newQuantity = newQuantity.slice(0, -1); // Remove the last digit
+      } else {
+        newQuantity = "1"; // Reset to 1 if it's a single digit
+      }
+
+      await handleInputChange(newQuantity); // Update quantity in the backend
+    }
+  };
+
   return (
     <div>
       <div className="max-w-screen-2xl container mx-auto xl:px-24 px-4">
@@ -179,9 +224,6 @@ const ProductDetails = ({item}) => {
               Greek Salad, Lasagne, Butternut Pumpkin, Tokusen Wagyu, Olivas
               Rellenas and more for a moderate cost
             </p>
-            <button className="bg-prime font-semibold btn text-white px-8 py-3 rounded-full">
-              Order Now
-            </button>
           </div>
         </div>
       </div>
@@ -189,44 +231,19 @@ const ProductDetails = ({item}) => {
       {/* product section */}
       <div className="section-container">
         <div className="font-sans tracking-wide max-md:mx-auto">
-          <div className="bg-gradient-to-r from-gray-600 via-gray-900 to-gray-900 md:min-h-[600px] grid items-start grid-cols-1 lg:grid-cols-5 md:grid-cols-2">
+          <div className="bg-gradient-to-r from-gray-600 via-gray-900 to-gray-900 md:min-h-[300px] grid items-start grid-cols-1 lg:grid-cols-5 md:grid-cols-2">
             <div className="lg:col-span-3 h-full p-8">
-              <div className="relative h-full flex items-center justify-center lg:min-h-[580px]">
+              <div className="relative h-full flex items-center justify-center lg:min-h-[400px]">
                 <img
                   src={product.image}
                   alt="Product"
                   className="lg:w-3/5 w-3/4 h-full object-contain max-lg:p-8"
                 />
 
-                <div className="flex space-x-4 items-end absolute right-0 max-md:right-4 md:bottom-4 bottom-0">
-                  <div className="bg-white w-10 h-10 grid items-center justify-center rounded-full rotate-90 shrink-0 cursor-pointer">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-4 fill-[#333] inline"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        d="M11.99997 18.1669a2.38 2.38 0 0 1-1.68266-.69733l-9.52-9.52a2.38 2.38 0 1 1 3.36532-3.36532l7.83734 7.83734 7.83734-7.83734a2.38 2.38 0 1 1 3.36532 3.36532l-9.52 9.52a2.38 2.38 0 0 1-1.68266.69734z"
-                        data-original="#000000"
-                      ></path>
-                    </svg>
-                  </div>
-                  <div className="bg-[#333] w-10 h-10 grid items-center justify-center rounded-full -rotate-90 shrink-0 cursor-pointer">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-4 fill-[#fff] inline"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        d="M11.99997 18.1669a2.38 2.38 0 0 1-1.68266-.69733l-9.52-9.52a2.38 2.38 0 1 1 3.36532-3.36532l7.83734 7.83734 7.83734-7.83734a2.38 2.38 0 1 1 3.36532 3.36532l-9.52 9.52a2.38 2.38 0 0 1-1.68266.69734z"
-                        data-original="#000000"
-                      ></path>
-                    </svg>
-                  </div>
-                </div>
+                <div className="flex space-x-4 items-end absolute right-0 max-md:right-4 md:bottom-4 bottom-0"></div>
               </div>
             </div>
-            <div className="lg:col-span-2 bg-gray-100 py-6 px-8 h-full">
+            <div className="lg:col-span-2 bg-gray-100 py-6 px-8 h-full mt-">
               <div>
                 <h2 className="text-2xl font-bold text-gray-800">
                   {product.name}
@@ -276,7 +293,7 @@ const ProductDetails = ({item}) => {
                 </div>
               </div>
 
-              <div className="mt-8">
+              <div className="my-9">
                 <h3 className="text-lg font-bold text-gray-800">Price</h3>
                 <p className="text-gray-800 text-3xl font-bold mt-4">
                   ₱{(product.price * product.quantity).toFixed(2)}
@@ -284,32 +301,9 @@ const ProductDetails = ({item}) => {
               </div>
 
               <div className="mt-8">
-                <h3 className="text-lg font-bold text-gray-800">
-                  Choose a Color
-                </h3>
-                <div className="flex flex-wrap gap-2 mt-4">
-                  <button
-                    type="button"
-                    className="w-10 h-10 bg-black border-2 border-white hover:border-gray-800 rounded-full shrink-0"
-                  ></button>
-                  <button
-                    type="button"
-                    className="w-10 h-10 bg-gray-400 border-2 border-white hover:border-gray-800 rounded-full shrink-0"
-                  ></button>
-                  <button
-                    type="button"
-                    className="w-10 h-10 bg-orange-400 border-2 border-white hover:border-gray-800 rounded-full shrink-0"
-                  ></button>
-                  <button
-                    type="button"
-                    className="w-10 h-10 bg-red-400 border-2 border-white hover:border-gray-800 rounded-full shrink-0"
-                  ></button>
-                </div>
-              </div>
-
-              <div className="mt-8">
                 <h3 className="text-lg font-bold text-gray-800">Quantity</h3>
                 <div className="flex divide-x border w-max mt-4 rounded overflow-hidden">
+                  {/* Decrease Button */}
                   <button
                     onClick={() => handleDecrease()}
                     disabled={isLoading || product.quantity <= 1}
@@ -327,12 +321,18 @@ const ProductDetails = ({item}) => {
                       ></path>
                     </svg>
                   </button>
-                  <button
-                    type="number"
-                    className="bg-transparent w-10 h-9 font-semibold flex items-center justify-center text-gray-800 text-lg"
-                  >
-                    {product.quantity}
-                  </button>
+
+                  {/* Quantity Input */}
+                  <input
+                    type="text" // Change type to "text" to better handle string manipulation
+                    value={product.quantity}
+                    onKeyDown={handleKeyDown}
+                    onChange={(e) => handleInputChange(e.target.value)}
+                    className="bg-transparent w-14 h-9 text-center font-semibold text-gray-800 text-lg"
+                    min="1"
+                  />
+
+                  {/* Increase Button */}
                   <button
                     onClick={() => handleIncrease()}
                     disabled={isLoading}
@@ -353,7 +353,7 @@ const ProductDetails = ({item}) => {
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-4 mt-8">
+              <div className="flex flex-wrap gap-4 my-16">
                 <button
                   type="button"
                   className="min-w-[200px] px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded"
@@ -405,6 +405,6 @@ const ProductDetails = ({item}) => {
       <section></section>
     </div>
   );
-}
+};
 
-export default ProductDetails
+export default ProductDetails;

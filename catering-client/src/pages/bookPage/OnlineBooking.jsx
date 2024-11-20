@@ -6,88 +6,69 @@ import "react-datepicker/dist/react-datepicker.css";
 import useUsers from "../../hooks/useUser";
 import MenuModal from "../../components/MenuModal";
 import useMenu from "../../hooks/useMenu";
+import useVenue from "../../hooks/useVenue";
 import useRental from "../../hooks/useRental";
 import useBookingCart from "../../hooks/useBookingCart";
 import AmenitiesModal from "../../components/AmenitiesModal";
 import useBookingRentalCart from "../../hooks/useBookingRentalCart";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import VenueModal from "../../components/VenueModal";
+import useBookingVenueCart from "../../hooks/useBookingVenueCart";
 
 const OnlineBooking = () => {
+  const navigate = useNavigate();
   const { users, refetch } = useUsers();
   const axiosSecure = useAxiosSecure();
   const { user, sendOtp } = useContext(AuthContext);
-  const [lastName, setLastName] = useState("");
-  const [firstName, setFirstName] = useState("");
   useState(false);
-  const [mobileNumber, setMobileNumber] = useState("");
-  const [isSaveEnabled, setIsSaveEnabled] = useState(false);
+  const MINIMUM_PAX = 30;
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [showAmenitiesModal, setShowAmenitiesModal] = useState(false);
+  const [showVenueModal, setShowVenueModal] = useState(false);
   const [menu, loading] = useMenu();
   const [rental] = useRental();
+  const [venue] = useVenue();
   const currentUser = users.find((u) => u.email === user.email);
   const [selectedMenuType, setSelectedMenuType] = useState("");
   const [bookingCart, refetchBookingCart] = useBookingCart();
   const [bookingRentalCart, refetchbookingRentalCart] = useBookingRentalCart();
+  const [bookingVenueCart, refetchbookingVenueCart] = useBookingVenueCart();
+  const [typeOfEvent, setTypeOfEvent] = useState("");
+  const [numberOfPax, setNumberOfPax] = useState(MINIMUM_PAX);
 
-  useEffect(() => {
-    if (user) {
-      if (user.displayName) {
-        const names = user.displayName.split(" ");
-        const first = names.slice(0, 2).join(" ");
-        const last = names[names.length - 1];
-        setFirstName(first || "");
-        setLastName(last || "");
-      }
+  console.log(venue);
 
-      if (currentUser && currentUser.mobileNumber) {
-        setMobileNumber(currentUser.mobileNumber);
-      }
-    }
-  }, [user, currentUser]);
-
-  const isValidMobileNumber = (value) => {
-    const numberWithoutCountryCode = value.replace(/^\+63/, "");
-    return /^\d{9,12}$/.test(numberWithoutCountryCode);
+  const handleTypeOfEventChange = (event) => {
+    setTypeOfEvent(event.target.value);
   };
 
-  const handleMobileNumberChange = (e) => {
-    const value = e.target.value;
-    setMobileNumber(value);
-    setIsSaveEnabled(isValidMobileNumber(value));
+  const handleNumberOfPaxChange = (event) => {
+    const value = event.target.value;
+    // Allow user to type freely but keep the raw input
+    setNumberOfPax(value);
   };
 
-  const handleSubmitMobileNumber = async (e) => {
-    e.preventDefault();
-    const formattedNumber = `+63${
-      mobileNumber.startsWith("0") ? mobileNumber.slice(1) : mobileNumber
-    }`;
-
-    try {
-      const response = await axiosSecure.patch(
-        `/users/${currentUser._id}/mobile`,
-        { phone_number: formattedNumber }
+  const handleNumberOfPaxBlur = () => {
+    // Validate when the input loses focus
+    const parsedPax = parseInt(numberOfPax, 10);
+    if (isNaN(parsedPax) || parsedPax < MINIMUM_PAX) {
+      Swal.fire(
+        "Invalid Pax",
+        `The minimum number of pax is ${MINIMUM_PAX}. It has been automatically adjusted.`,
+        "warning"
       );
-
-      if (response.status === 200) {
-        await refetch();
-        const updatedUser = users.find((u) => u.email === user.email);
-        if (updatedUser && updatedUser.mobileNumber) {
-          setMobileNumber(updatedUser.mobileNumber);
-        }
-        setIsMobileNumberModalVisible(true);
-      } else {
-        throw new Error(
-          response.data.message || "Failed to save mobile number"
-        );
-      }
-    } catch (error) {
-      Swal.fire("Error", error.message, "error");
+      setNumberOfPax(MINIMUM_PAX); // Reset to minimum if invalid
+    } else {
+      setNumberOfPax(parsedPax); // Apply valid input
     }
   };
 
   const handleMenuToggleModal = () => {
     setShowMenuModal((prev) => !prev);
+  };
+
+  const handleVenueToggleModal = () => {
+    setShowVenueModal((prev) => !prev);
   };
 
   const handleAmenitiesToggleModal = () => {
@@ -96,6 +77,56 @@ const OnlineBooking = () => {
 
   const handleMenuTypeChange = (event) => {
     setSelectedMenuType(event.target.value);
+  };
+  const totalMenuPrice = bookingCart.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
+  const totalRentalPrice = bookingRentalCart.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
+  const totalVenuePrice = bookingVenueCart.reduce(
+    (total, item) => total + item.rentalPrice, // Assuming venues don't have quantity
+    0
+  );
+
+  const totalPrice = totalMenuPrice + totalRentalPrice + totalVenuePrice;
+
+  const handleProceedToCheckout = () => {
+    // Validation for required fields
+    if (!typeOfEvent) {
+      Swal.fire("Error", "Please select a type of event.", "error");
+      return;
+    }
+
+    if (!numberOfPax || isNaN(numberOfPax) || numberOfPax < MINIMUM_PAX) {
+      Swal.fire(
+        "Error",
+        `Please enter a valid number of pax (minimum ${MINIMUM_PAX}).`,
+        "error"
+      );
+      return;
+    }
+
+    if (!selectedMenuType) {
+      Swal.fire("Error", "Please select a type of menu.", "error");
+      return;
+    }
+
+    // Proceed to checkout if all validations pass
+    navigate("/process-checkout", {
+      state: {
+        menuItems: bookingCart,
+        rentalItems: bookingRentalCart,
+        venueItems: bookingVenueCart,
+        orderTotal: totalPrice,
+        source: "booking",
+        typeOfEvent,
+        numberOfPax,
+        typeOfMenu: selectedMenuType,
+      },
+    });
   };
 
   return (
@@ -109,7 +140,8 @@ const OnlineBooking = () => {
           <select
             id="countries"
             className="block w-full px-2.5 pb-2.5 pt-4 text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
-            defaultValue="" // Sets default selected option
+            value={typeOfEvent}
+            onChange={handleTypeOfEventChange}
           >
             <option value="" disabled>
               Select Type of Event
@@ -131,16 +163,18 @@ const OnlineBooking = () => {
 
         <div className="relative mt-4">
           <input
-            type="text"
-            id="lastName"
+            type="number"
+            id="numberOfPax"
             className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
-            placeholder=" "
+            value={numberOfPax}
+            onChange={handleNumberOfPaxChange}
+            onBlur={handleNumberOfPaxBlur} // Validate on blur
           />
           <label
-            htmlFor="lastName"
+            htmlFor="numberOfPax"
             className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 start-2 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
           >
-            Number of Pax
+            Number of Pax (Minimum {MINIMUM_PAX})
           </label>
         </div>
 
@@ -156,7 +190,6 @@ const OnlineBooking = () => {
             </option>
             <option value="Buffet Type">Buffet Type</option>
             <option value="Packed Meals">Packed Meals</option>
-            <option value="Cocktail Type">Cocktail Type</option>
           </select>
 
           <label
@@ -179,8 +212,6 @@ const OnlineBooking = () => {
           menuItems={menu}
           selectedMenuType={selectedMenuType}
         />
-
-        
 
         {/* Display current booking cart items */}
         <div className="mt-8">
@@ -213,7 +244,7 @@ const OnlineBooking = () => {
             <p>No items in your booking cart.</p>
           )}
         </div>
-
+        <div className="divider"></div>
         <button
           onClick={handleAmenitiesToggleModal}
           className="block text-white bg-prime hover:bg-orange-800 focus:ring-4 focus:outline-none focus:ring-gray-300 my-6 font-medium rounded-lg text-sm px-5 py-2.5 text-center "
@@ -222,15 +253,17 @@ const OnlineBooking = () => {
         </button>
 
         <AmenitiesModal
-        showAmenitiesModal={showAmenitiesModal}
-        handleAmenitiesToggleModal={handleAmenitiesToggleModal}
-        rentalItems={rental}
+          showAmenitiesModal={showAmenitiesModal}
+          handleAmenitiesToggleModal={handleAmenitiesToggleModal}
+          rentalItems={rental}
+          pax={numberOfPax}
         />
-
 
         {/* Display current booking amenities cart items */}
         <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-4">Current Booking Amenities</h2>
+          <h2 className="text-lg font-semibold mb-4">
+            Current Booking Amenities
+          </h2>
           {bookingRentalCart.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
               {bookingRentalCart.map((item, index) => (
@@ -259,16 +292,57 @@ const OnlineBooking = () => {
             <p>No items in your booking cart.</p>
           )}
         </div>
+        <div className="divider"></div>
+        <button
+          onClick={handleVenueToggleModal}
+          className="block text-white bg-prime hover:bg-orange-800 focus:ring-4 focus:outline-none focus:ring-gray-300 my-6 font-medium rounded-lg text-sm px-5 py-2.5 text-center "
+        >
+          SHOW VENUE
+        </button>
+        <VenueModal
+          showVenueModal={showVenueModal}
+          handleVenueToggleModal={handleVenueToggleModal}
+          venueItems={venue}
+        />
+
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold mb-4">Current Booking Venue</h2>
+          {bookingVenueCart.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
+              {bookingVenueCart.map((item, index) => (
+                <div key={index} className="w-full max-w-xs mx-auto">
+                  <div className="rounded-xl  bg-gray-100 border border-gray-200 flex flex-col items-center gap-3 transition-all duration-500 hover:border-gray-400">
+                    <div className="img-box w-24 h-24">
+                      <img
+                        src={item.images}
+                        alt={item.venueName}
+                        className="w-full h-full rounded-lg object-cover"
+                      />
+                    </div>
+                    <div className="text-center">
+                      <h2 className="font-medium text-md text-black mb-1">
+                        {item.venueName}
+                      </h2>
+                      <h6 className="font-semibold text-lg text-gray-600">
+                        ₱{item.rentalPrice}
+                      </h6>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p>No items in your booking cart.</p>
+          )}
+        </div>
+
         <div className="flex justify-end mt-4">
           <button
             type="submit"
             className="bg-prime text-white rounded-lg px-6 py-2 mt-4 w-full"
-            disabled={!isSaveEnabled}
-            onClick={handleSubmitMobileNumber}
+            onClick={handleProceedToCheckout}
           >
-            <Link to="/process-checkout">
             Proceed to Checkout
-            </Link>
           </button>
         </div>
       </div>

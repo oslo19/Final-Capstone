@@ -18,6 +18,10 @@ const venueSchema = new Schema({
         type: String,
         required: true
     },
+    images: { 
+        type: [String], 
+        required: true, 
+    },
     address: {
         type: String,
         required: true

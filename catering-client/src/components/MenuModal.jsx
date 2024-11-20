@@ -21,6 +21,7 @@ const MenuModal = ({
   const [maxBudget, setMaxBudget] = useState(1000);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [filteredItems, setFilteredItems] = useState(menuItems);
+  const [view, setView] = useState("custom"); 
 
   useEffect(() => {
     if (!showMenuModal) {
@@ -37,15 +38,25 @@ const MenuModal = ({
   }, [showMenuModal]);
 
   const filterItems = (category) => {
-    const filtered =
-      category === "all" ? menuItems : menuItems.filter((item) => item.category.toLowerCase() === category.toLowerCase());
+    let filtered = menuItems;
+    
+    // Filter by category
+    if (category !== "all") {
+      filtered = filtered.filter(
+        (item) => item.category.toLowerCase() === category.toLowerCase()
+      );
+    }
+    
+    // Filter by budget
+    filtered = filtered.filter((item) => item.price <= priceRange);
+    
     setFilteredItems(filtered);
   };
+  
 
-  // Update filteredItems whenever selectedCategory changes
   useEffect(() => {
     filterItems(selectedCategory);
-  }, [selectedCategory, menuItems]);
+  }, [selectedCategory, menuItems, priceRange]);
 
   if (!showMenuModal) return null;
 
@@ -133,6 +144,9 @@ const MenuModal = ({
     handleMenuToggleModal(); // Close the modal
   };
 
+  const handleViewChange = (newView) => {
+    setView(newView);
+  };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl w-[90%] h-[90%] m-4 overflow-hidden z-50 mt-9">
@@ -156,7 +170,7 @@ const MenuModal = ({
               <span>₱{priceRange}</span>
               <span>₱{maxBudget}</span>
             </div>
-            <label htmlFor="max-budget" className="block text-sm font-medium text-gray-700 mt-1">Estimated Budget</label>
+            <label htmlFor="max-budget" className="block text-sm font-medium text-gray-700 mt-1">Enter your Budget</label>
             <input
               type="number"
               id="max-budget"

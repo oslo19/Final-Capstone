@@ -6,13 +6,14 @@ import { Link } from 'react-router-dom';
 
 const Order = () => {
   const { user } = useAuth();
-  console.log(user?.email)
   const token = localStorage.getItem('access-token')
+
+
 
   const { refetch, data: orders = [] } = useQuery({
       queryKey: ['orders', user?.email],
       queryFn: async () => {
-          const res = await fetch(`http://localhost:6001/payments?email=${user?.email}`, {
+          const res = await fetch(`http://localhost:6001/orders?email=${user?.email}`, {
               headers: {
                   authorization: `Bearer ${token}`
               }
@@ -21,7 +22,9 @@ const Order = () => {
       },
   })
 
- // console.log(orders)  
+  
+
+ console.log(orders)  
     const formatDate = (createdAt) => {
       const createdAtDate = new Date(createdAt)
       return createdAtDate.toLocaleDateString()

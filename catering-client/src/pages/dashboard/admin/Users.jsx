@@ -20,12 +20,22 @@ const Users = () => {
     });
   };
 
-  const handleDeleteUser = user => {
-    axiosSecure.delete(`/users/${user._id}`).then(res => {
-      alert(`${user.name} is removed from database`);
-      refetch();
-    })
-  }
+  const handleDeleteUser = (user) => {
+    const confirmed = window.confirm(`Are you sure you want to delete ${user.name}?`);
+    if (!confirmed) return;
+  
+    axiosSecure
+      .delete(`/users/${user._id}`)
+      .then(() => {
+        alert(`${user.name} has been successfully deleted.`);
+        refetch(); // Refresh the user list
+      })
+      .catch((error) => {
+        console.error("Error deleting user:", error);
+        alert("Failed to delete user. Please try again.");
+      });
+  };
+  
   return (
     <div>
       <div className="flex items-center justify-between m-4">

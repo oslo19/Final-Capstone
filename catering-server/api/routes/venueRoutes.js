@@ -16,5 +16,6 @@ router.get('/:id', venueController.singleVenue);
 
 // Update a single venue
 router.patch('/:id', venueController.updateVenue);
+router.patch('/reset-quantity/:id', venueController.resetVenueItemQuantity);
 
 module.exports = router;

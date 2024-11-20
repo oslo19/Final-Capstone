@@ -12,22 +12,23 @@ const getAllVenues = async (req, res) => {
 
 const postVenue = async (req, res) => {
     const { venueName, venueType, description, address, capacity, rentalPrice, images } = req.body;
-  
+
     try {
-      const newVenue = await Venue.create({
-        venueName,
-        venueType,
-        description,
-        address,
-        capacity,
-        rentalPrice,
-        images, // Array of image URLs
-      });
-      res.status(200).json(newVenue);
+        const newVenue = await Venue.create({
+            venueName,
+            venueType,
+            description,
+            address,
+            capacity,
+            rentalPrice,
+            images, 
+        });
+        res.status(200).json(newVenue);
     } catch (error) {
-      res.status(500).json({ message: error.message });
+        res.status(500).json({ message: error.message });
     }
-  };
+};
+
   
 
 // Delete a venue
@@ -74,10 +75,31 @@ const updateVenue = async (req, res) => {
     }
 };
 
+// Reset quantity of a single menu item
+const resetVenueItemQuantity = async (req, res) => {
+    const venueId = req.params.id;
+    try {
+        // Update the quantity to 1
+        const updatedVenue = await Venue.findByIdAndUpdate(
+            venueId, { quantity: 1 }, 
+            { new: true, runValidators: true }
+        );
+
+        if(!updatedVenue) {
+            return res.status(404).json({ message: "Venue not found" });
+        }
+
+        res.status(200).json(updatedVenue);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     getAllVenues,
     postVenue,
     deleteVenue,
     singleVenue,
-    updateVenue
+    updateVenue,
+    resetVenueItemQuantity
 };

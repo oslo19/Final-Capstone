@@ -30,6 +30,9 @@ import Venue from "../pages/venuePage/Venue";
 import AddVenue from "../pages/dashboard/admin/AddVenue";
 import UpdateVenue from "../pages/dashboard/admin/UpdateVenue";
 import ManageVenues from "../pages/dashboard/admin/ManageVenues";
+import ManageBookings from "../pages/dashboard/admin/ManageBookings";
+import VenueDetails from "../pages/venuePage/VenueDetails";
+import OrderConfirmed from "../pages/dashboard/admin/OrderConfirmed";
 const router = createBrowserRouter([
     {
       path: "/",
@@ -45,7 +48,7 @@ const router = createBrowserRouter([
         },
         {
           path: "/order",
-          element:<PrivateRoute><Order/></PrivateRoute>
+          element:<Order/>
         },
         {
           path: "/update-profile",
@@ -71,6 +74,11 @@ const router = createBrowserRouter([
           path: "rentaldetails/:id",
           element: <RentalDetails/>,
         },
+        {
+          path: "venuedetails/:id",
+          element: <VenueDetails/>,
+        },
+
 
         {
           path: "/book",
@@ -132,6 +140,10 @@ const router = createBrowserRouter([
           element: <ManageItems/>
         },
         {
+          path: "manage-bookings",
+          element: <ManageBookings/>
+        },
+        {
           path: "manage-rentals",
           element: <ManageRentals/>
         },
@@ -146,6 +158,10 @@ const router = createBrowserRouter([
         {
           path: "manage-venues",
           element: <ManageVouchers/>
+        },
+        {
+          path: "orderconfirmed",
+          element: <OrderConfirmed/>
         },
         {
           path: "update-menu/:id",
