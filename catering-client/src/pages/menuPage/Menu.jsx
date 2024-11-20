@@ -10,12 +10,14 @@ const Menu = () => {
   const [sortOption, setSortOption] = useState("default");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(8); // Number of items to display per page
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
+  
   useEffect(() => {
     // Fetch data from the backend
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:6001/menu");
+        const response = await fetch(`${BASE_URL}/menu`);
         const data = await response.json();
         setMenu(data);
         setFilteredItems(data); // Initially, display all items

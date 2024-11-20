@@ -7,10 +7,14 @@ const mongoose = require("mongoose");
 const jwt = require('jsonwebtoken');
 require('dotenv').config()
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-
+const corsOptions = {
+  origin: ["http://213.210.37.18"], // Add your frontend's IP or domain
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+};
 
 // middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 
