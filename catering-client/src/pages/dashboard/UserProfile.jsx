@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 const UserProfile = () => {
   const { user } = useContext(AuthContext);
   const { updateUserProfile } = useContext(AuthContext);
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
 

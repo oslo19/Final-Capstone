@@ -9,7 +9,7 @@ import RecipeModal from "./RecipeModal";
 
 const Cards = ({ item}) => {
   const { name, image, price, recipe, _id } = item;
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   
 
 

@@ -21,7 +21,7 @@ const AmenitiesModal = ({
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [filteredItems, setFilteredItems] = useState(rentalItems);
   const [hasAddedToCart, setHasAddedToCart] = useState(false);
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   
   useEffect(() => {
     if (showAmenitiesModal && !hasAddedToCart && rentalItems.length > 0) {
@@ -35,7 +35,7 @@ const AmenitiesModal = ({
 
         if (!isInCart && quantity > 0) {
           axios
-            .post("http://localhost:6001/booking-rental-cart", {
+            .post(`${BASE_URL}/booking-rental-cart`, {
               email: user.email,
               rentalItemId: item._id,
               name: item.name,
@@ -97,7 +97,7 @@ const AmenitiesModal = ({
       };
   
       axios
-        .post("http://localhost:6001/booking-rental-cart", rentalItem)
+        .post(`${BASE_URL}/booking-rental-cart`, rentalItem)
         .then((response) => {
           if (response) {
             refetch();

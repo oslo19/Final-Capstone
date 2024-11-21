@@ -10,6 +10,7 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
   // React Hook Form
   const { register, handleSubmit, reset, formState: { errors } } = useForm();

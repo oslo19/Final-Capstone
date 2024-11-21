@@ -1,15 +1,16 @@
-import axios from 'axios'
-import React from 'react'
+import axios from 'axios';
 
 
-const axiosPublic =  axios.create({
-    baseURL: 'http://localhost:6001',
-  })
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
+
+const axiosPublic = axios.create({
+  baseURL: BASE_URL,
+});
+
+// Custom hook to return the Axios instance
 const useAxiosPublic = () => {
-  return axiosPublic
-}
+  return axiosPublic;
+};
 
 export default useAxiosPublic;
-
-  

@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 
 const usePackage = () => {
     const axiosPublic = useAxiosPublic();
-
+    const BASE_URL = import.meta.env.VITE_BACKEND_URL;
     const {data: packages =[], isPending: loading, refetch} = useQuery({
         queryKey: ['packages'],
         queryFn: async () => {

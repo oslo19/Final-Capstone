@@ -13,7 +13,7 @@ const MobileNumberModal = ({ mobileNumber, confirmationResult, currentUserId, on
   const modalRef = useRef(null); // Ref to access the dialog
   const axiosSecure = useAxiosSecure();  
   const { auth } = useContext(AuthContext);
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   // Show the modal once the component mounts
   useEffect(() => {
     if (modalRef.current) modalRef.current.showModal();

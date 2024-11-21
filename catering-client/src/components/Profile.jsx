@@ -8,7 +8,7 @@ const Profile = ({ user }) => {
   const { logOut } = useContext(AuthContext);
   const navigate = useNavigate();
   const { users, refetch } = useUsers();
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
   const currentUser = users.find((u) => u.email === user.email);
  

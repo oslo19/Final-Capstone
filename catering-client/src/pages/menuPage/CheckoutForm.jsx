@@ -54,7 +54,7 @@ const CheckoutForm = () => {
   const elements = useElements();
   const navigate = useNavigate();
   console.log("Location State:", location.state);
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   console.log();
   const {
     menuItems = [],
@@ -103,7 +103,7 @@ const CheckoutForm = () => {
               };
 
               try {
-                const response = await fetch("http://localhost:6001/orders", {
+                const response = await fetch(`${BASE_URL}/orders`, {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
@@ -339,7 +339,7 @@ const CheckoutForm = () => {
   useEffect(() => {
     const fetchVouchers = async () => {
       try {
-        const response = await axios.get("http://localhost:6001/voucher");
+        const response = await axios.get(`${BASE_URL}/voucher`);
         setVoucherList(response.data);
       } catch (error) {
         console.error("Error fetching vouchers:", error);
@@ -381,7 +381,7 @@ const CheckoutForm = () => {
     try {
       // Call your backend to create a payment intent
       const paymentIntentResponse = await axios.post(
-        "http://localhost:6001/create-payment-intent",
+        `${BASE_URL}/create-payment-intent`,
         {
           price: finalTotal, // Send the final total price
         }
@@ -430,7 +430,7 @@ const CheckoutForm = () => {
         createdAt: new Date(),
       };
 
-      const orderResponse = await fetch("http://localhost:6001/orders", {
+      const orderResponse = await fetch(`${BASE_URL}/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -464,7 +464,7 @@ const CheckoutForm = () => {
       // Clear menu items
       if (menuItems.length > 0) {
         for (const item of menuItems) {
-          await axios.delete(`http://localhost:6001/booking-cart/${item._id}`);
+          await axios.delete(`${BASE_URL}/booking-cart/${item._id}`);
         }
       }
 
@@ -472,7 +472,7 @@ const CheckoutForm = () => {
       if (rentalItems.length > 0) {
         for (const item of rentalItems) {
           await axios.delete(
-            `http://localhost:6001/booking-rental-cart/${item._id}`
+            `${BASE_URL}/booking-rental-cart/${item._id}`
           );
         }
       }
@@ -481,7 +481,7 @@ const CheckoutForm = () => {
       if (venueItems.length > 0) {
         for (const item of venueItems) {
           await axios.delete(
-            `http://localhost:6001/booking-venue-cart/${item._id}`
+            `${BASE_URL}/booking-venue-cart/${item._id}`
           );
         }
       }

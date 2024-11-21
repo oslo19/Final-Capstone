@@ -3,7 +3,7 @@ import useAxiosPublic from './useAxiosPublic';
 
 const useRentalDetails = (id) => {
     const axiosPublic = useAxiosPublic();
-
+    const BASE_URL = import.meta.env.VITE_BACKEND_URL;
     const { data: rental = {}, isPending: loading, refetch } = useQuery({
         queryKey: ['rental', id],
         queryFn: async () => {

@@ -7,7 +7,7 @@ import useAxiosSecure from "../../../hooks/useAxiosSecure";
 const AddRental = () => {
   const { register, handleSubmit, reset } = useForm();
   const axiosSecure = useAxiosSecure();
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   // Cloudinary Configuration
   const cloudinaryUploadUrl = `https://api.cloudinary.com/v1_1/dtg6ofu1q/image/upload`;
   const uploadPreset = "unsigned_preset"; 

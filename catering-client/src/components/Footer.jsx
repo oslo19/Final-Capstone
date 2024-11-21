@@ -1,6 +1,7 @@
 import React from "react";
 
 const Footer = () => {
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   return (
     <div>
       <footer className="footer xl:px-24 px-4 text-white bg-gradient-to-r from-gray-900 via-gray-900 to-gray-950 md:min-h- border-gray-200 rounded-lg shadow">

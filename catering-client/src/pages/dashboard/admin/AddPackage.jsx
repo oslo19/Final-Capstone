@@ -11,7 +11,7 @@ const AddPackage = () => {
   const [totalPrice, setTotalPrice] = useState(0);
   const axiosSecure = useAxiosSecure();
   const axiosPublic = useAxiosPublic();
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   // Fetch all menu items for selection
   useEffect(() => {
     const fetchMenuItems = async () => {

@@ -4,6 +4,7 @@ import { FaTrashAlt, FaUser, FaUsers } from "react-icons/fa";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 
 const Users = () => {
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   const axiosSecure = useAxiosSecure();
   const { refetch, data: users = [] } = useQuery({
     queryKey: ["users"],

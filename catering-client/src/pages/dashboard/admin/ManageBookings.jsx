@@ -4,11 +4,11 @@ import { toast } from "react-toastify";
 
 const ManageBookings = () => {
   const token = localStorage.getItem("access-token");
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   const { data: orders = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["adminOrders"],
     queryFn: async () => {
-      const res = await fetch(`http://localhost:6001/orders/all`, {
+      const res = await fetch(`${BASE_URL}/orders/all`, {
         headers: {
           authorization: `Bearer ${token}`,
         },
@@ -25,7 +25,7 @@ const ManageBookings = () => {
 
   const confirmOrderMutation = useMutation({
     mutationFn: async (orderId) => {
-      const res = await fetch(`http://localhost:6001/orders/confirm/${orderId}`, {
+      const res = await fetch(`${BASE_URL}/orders/confirm/${orderId}`, {
         method: "PATCH",
         headers: {
           authorization: `Bearer ${token}`,

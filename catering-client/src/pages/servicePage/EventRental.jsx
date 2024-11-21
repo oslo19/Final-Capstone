@@ -6,7 +6,7 @@ const EventRental = () => {
   const [filteredItems, setFilteredItems] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState(""); // State for search input
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(12); // Number of items to display per page
 
@@ -14,7 +14,7 @@ const EventRental = () => {
     // Fetch data from the backend
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:6001/rental");
+        const response = await fetch(`${BASE_URL}/rental`);
         const data = await response.json();
         setRental(data);
         setFilteredItems(data); // Initially, display all items

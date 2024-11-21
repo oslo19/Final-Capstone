@@ -7,7 +7,7 @@ const MapSearchBox = ({ onAddressSelect, currentAddress }) => {
     const [searchText, setSearchText] = useState(currentAddress || ''); // Initialize with current address if available
     const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
-
+    const BASE_URL = import.meta.env.VITE_BACKEND_URL;
     useEffect(() => {
         setSearchText(currentAddress || '');  // Reset searchText when currentAddress changes
     }, [currentAddress]);

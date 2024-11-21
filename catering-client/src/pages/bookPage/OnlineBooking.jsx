@@ -35,7 +35,7 @@ const OnlineBooking = () => {
   const [bookingVenueCart, refetchbookingVenueCart] = useBookingVenueCart();
   const [typeOfEvent, setTypeOfEvent] = useState("");
   const [numberOfPax, setNumberOfPax] = useState(MINIMUM_PAX);
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   console.log(venue);
 
   const handleTypeOfEventChange = (event) => {

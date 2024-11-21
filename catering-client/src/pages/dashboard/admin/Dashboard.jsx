@@ -5,11 +5,11 @@ import ReactApexChart from "react-apexcharts";
 const Dashboard = () => {
   const token = localStorage.getItem("access-token");
   const [monthlySales, setMonthlySales] = useState(Array(12).fill(0));
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   useQuery({
     queryKey: ["salesData"],
     queryFn: async () => {
-      const res = await fetch(`http://localhost:6001/orders/all`, {
+      const res = await fetch(`${BASE_URL}/orders/all`, {
         headers: {
           authorization: `Bearer ${token}`,
         },

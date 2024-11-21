@@ -2,7 +2,7 @@ import React from 'react'
 import { AuthContext } from "../contexts/AuthProvider";
 
 const RecipeModal = ({description}) => {
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   
   return (
     <dialog id="my_modal_6" className="modal modal-middle sm:modal-middle">

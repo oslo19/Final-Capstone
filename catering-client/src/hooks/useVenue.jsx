@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 
 const useVenue = () => {
     const axiosPublic = useAxiosPublic();
-
+    const BASE_URL = import.meta.env.VITE_BACKEND_URL;
     const {data: venues =[], isPending: loading, refetch} = useQuery({
         queryKey: ['venues'],
         queryFn: async () => {

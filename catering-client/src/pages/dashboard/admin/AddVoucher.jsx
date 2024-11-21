@@ -7,7 +7,7 @@ const AddVoucher = () => {
   const { register, handleSubmit, reset, setValue } = useForm();
   const axiosSecure = useAxiosSecure();
   const [voucherCode, setVoucherCode] = useState("");
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   // Function to generate a random voucher code
   const generateVoucherCode = () => {
     const code = "VOUCH-" + Math.random().toString(36).substr(2, 8).toUpperCase();

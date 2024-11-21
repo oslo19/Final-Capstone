@@ -9,7 +9,7 @@ require('dotenv').config()
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const corsOptions = {
   origin: ["http://213.210.37.18"], // Add your frontend's IP or domain
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true,
 };
 

@@ -5,7 +5,7 @@ import useBookingCart from "../hooks/useBookingCart";
 
 const CartPopover = ({ isVisible }) => {
   const [bookingCart, refetch] = useBookingCart();
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   useEffect(() => {
     refetch();
   }, [refetch]);
@@ -17,7 +17,7 @@ const CartPopover = ({ isVisible }) => {
   const handleIncrease = async (item) => {
     try {
       const response = await fetch(
-        `http://localhost:6001/booking-cart/${item._id}`,
+        `${BASE_URL}/booking-cart/${item._id}`,
         {
           method: "PUT",
           headers: {
@@ -41,7 +41,7 @@ const CartPopover = ({ isVisible }) => {
     if (item.quantity > 1) {
       try {
         const response = await fetch(
-          `http://localhost:6001/booking-cart/${item._id}`,
+          `${BASE_URL}/booking-cart/${item._id}`,
           {
             method: "PUT",
             headers: {
@@ -79,7 +79,7 @@ const CartPopover = ({ isVisible }) => {
     }).then((result) => {
       if (result.isConfirmed) {
         axios
-          .delete(`http://localhost:6001/booking-cart/${item._id}`)
+          .delete(`${BASE_URL}/booking-cart/${item._id}`)
           .then((response) => {
             if (response) {
               refetch();

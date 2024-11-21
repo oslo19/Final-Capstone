@@ -11,7 +11,7 @@ const UpdateVenue = () => {
   const { register, handleSubmit, reset } = useForm()
   const axiosPublic = useAxiosPublic()
   const axiosSecure = useAxiosSecure()
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   const navigate = useNavigate()
 
   // image hosting key

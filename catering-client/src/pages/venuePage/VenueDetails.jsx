@@ -20,7 +20,7 @@ const ProductDetails = ({ item }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   console.log(venue);
   useEffect(() => {
     const resetQuantity = async () => {
@@ -28,7 +28,7 @@ const ProductDetails = ({ item }) => {
       if (venue && venue._id) {
         try {
           await fetch(
-            `http://localhost:6001/venues/reset-quantity/${venue._id}`,
+            `${BASE_URL}/venues/reset-quantity/${venue._id}`,
             {
               method: "PATCH",
             }
@@ -58,7 +58,7 @@ const ProductDetails = ({ item }) => {
       };
 
       axios
-        .post("http://localhost:6001/carts", cartItem)
+        .post(`${BASE_URL}/carts`, cartItem)
         .then((response) => {
           console.log(response);
           if (response) {
@@ -219,16 +219,11 @@ const ProductDetails = ({ item }) => {
               </div>
 
               <div className="flex flex-wrap gap-4 mt-8">
-                <button
-                  type="button"
-                  className="min-w-[200px] px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded"
-                >
-                  Buy now
-                </button>
+                  
                 <button
                   onClick={() => handleAddToCart()}
                   type="button"
-                  className="min-w-[200px] px-4 py-2.5 border border-orange-500 bg-transparent hover:bg-gray-50 text-gray-800 text-sm font-semibold rounded"
+                   className="min-w-[200px] px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded"
                 >
                   Add to cart
                 </button>

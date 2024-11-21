@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 
 const useRental = () => {
     const axiosPublic = useAxiosPublic();
-
+    const BASE_URL = import.meta.env.VITE_BACKEND_URL;
     const {data: rental =[], isPending: loading, refetch} = useQuery({
         queryKey: ['rental'],
         queryFn: async () => {

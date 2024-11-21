@@ -5,12 +5,12 @@ import axios from 'axios'; // Ensure axios is installed and imported
 
 const useUsers = () => {
     const token = localStorage.getItem('access-token');
-
+    const BASE_URL = import.meta.env.VITE_BACKEND_URL;
     const { refetch, data: users = [], isLoading: isUserLoading } = useQuery({
         queryKey: ['users'],
         enabled: !!token, // Only run query if token is available
         queryFn: async () => {
-            const res = await axios.get('http://localhost:6001/users', {
+            const res = await axios.get(`${BASE_URL}/users`, {
                 headers: {
                     authorization: `Bearer ${token}`,
                 },

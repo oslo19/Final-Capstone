@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from "react";
 const Map = ({ center }) => {
   const mapRef = useRef(null);
   const markerRef = useRef(null);
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   const defaultCenter = { lat: 10.239613, lng: 123.780381 }; // Default location
   const validCenter =
     center && center.length === 2

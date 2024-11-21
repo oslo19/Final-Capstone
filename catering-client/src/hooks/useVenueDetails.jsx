@@ -3,7 +3,7 @@ import useAxiosPublic from './useAxiosPublic';
 
 const useVenueDetails = (id) => {
     const axiosPublic = useAxiosPublic();
-
+    const BASE_URL = import.meta.env.VITE_BACKEND_URL;
     const { data: venue = {}, isPending: loading, refetch } = useQuery({
         queryKey: ['venues', id],
         queryFn: async () => {

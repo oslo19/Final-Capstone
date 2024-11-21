@@ -16,7 +16,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [cart, refetch] = useCart();
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   useEffect(() => {
     const handleScroll = () => {
       const offset = window.scrollY;
