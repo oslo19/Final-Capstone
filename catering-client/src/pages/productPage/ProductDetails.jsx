@@ -18,18 +18,16 @@ const ProductDetails = ({ item }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
     const resetQuantity = async () => {
       // Ensure that product._id exists before making the API call
       if (product && product._id) {
         try {
-          await fetch(
-            `http://localhost:6001/menu/reset-quantity/${product._id}`,
-            {
-              method: "PATCH",
-            }
-          );
+          await fetch(`${BASE_URL}/menu/reset-quantity/${product._id}`, {
+            method: "PATCH",
+          });
         } catch (error) {
           console.error("Failed to reset quantity:", error);
         }
@@ -58,16 +56,13 @@ const ProductDetails = ({ item }) => {
     setProductItems(updatedProduct);
 
     try {
-      const response = await fetch(
-        `http://localhost:6001/menu/${product._id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ quantity: product.quantity + 1 }),
-        }
-      );
+      const response = await fetch(`${BASE_URL}/menu/${product._id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ quantity: product.quantity + 1 }),
+      });
 
       if (response.ok) {
         await refetch(); // Fetch updated data from server
@@ -95,16 +90,13 @@ const ProductDetails = ({ item }) => {
     setProductItems(updatedProduct);
 
     try {
-      const response = await fetch(
-        `http://localhost:6001/menu/${product._id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ quantity: product.quantity - 1 }),
-        }
-      );
+      const response = await fetch(`${BASE_URL}/menu/${product._id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ quantity: product.quantity - 1 }),
+      });
 
       if (response.ok) {
         await refetch(); // Fetch updated data from server
@@ -130,7 +122,7 @@ const ProductDetails = ({ item }) => {
       };
 
       axios
-        .post("http://localhost:6001/carts", cartItem)
+        .post(`${BASE_URL}/carts`, cartItem)
         .then((response) => {
           console.log(response);
           if (response) {
@@ -176,16 +168,13 @@ const ProductDetails = ({ item }) => {
     // Validate input to ensure it is a positive number
     if (isNaN(newQuantity) || newQuantity < 1) return;
     try {
-      const response = await fetch(
-        `http://localhost:6001/menu/${product._id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ quantity: newQuantity }),
-        }
-      );
+      const response = await fetch(`${BASE_URL}/menu/${product._id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ quantity: newQuantity }),
+      });
 
       if (response.ok) {
         await refetch(); // Fetch updated data from the server
@@ -324,8 +313,8 @@ const ProductDetails = ({ item }) => {
 
                   {/* Quantity Input */}
                   <input
-                    type="text" // Change type to "text" to better handle string manipulation
-                    value={product.quantity}
+                    type="text"
+                    value={product?.quantity ?? 1} // Default to 1 if quantity is undefined
                     onKeyDown={handleKeyDown}
                     onChange={(e) => handleInputChange(e.target.value)}
                     className="bg-transparent w-14 h-9 text-center font-semibold text-gray-800 text-lg"
@@ -355,15 +344,9 @@ const ProductDetails = ({ item }) => {
 
               <div className="flex flex-wrap gap-4 my-16">
                 <button
-                  type="button"
-                  className="min-w-[200px] px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded"
-                >
-                  Buy now
-                </button>
-                <button
                   onClick={() => handleAddToCart()}
                   type="button"
-                  className="min-w-[200px] px-4 py-2.5 border border-orange-500 bg-transparent hover:bg-gray-50 text-gray-800 text-sm font-semibold rounded"
+                  className="min-w-[200px] px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded"
                 >
                   Add to cart
                 </button>

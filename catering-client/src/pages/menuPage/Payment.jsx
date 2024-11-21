@@ -6,6 +6,7 @@ import useCart from '../../hooks/useCart';
 
 const stripePromise = loadStripe(import.meta.env.VITE_Stripe_PK);
 const Payment = () => {
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   const [cart] = useCart();
   //console.log(cart)
   //calculate the checkout price

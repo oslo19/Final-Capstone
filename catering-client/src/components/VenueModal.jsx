@@ -16,7 +16,7 @@ const VenueModal = ({ handleVenueToggleModal, showVenueModal, venueItems }) => {
   const [bookingVenueCart, refetch] = useBookingVenueCart();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [filteredItems, setFilteredItems] = useState(venueItems);
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   useEffect(() => {
     if (showVenueModal) {
       document.body.classList.add("overflow-hidden");
@@ -62,7 +62,7 @@ const VenueModal = ({ handleVenueToggleModal, showVenueModal, venueItems }) => {
       };
 
       axios
-        .post("http://localhost:6001/booking-venue-cart", venueItem)
+        .post(`${BASE_URL}/booking-venue-cart`, venueItem)
         .then((response) => {
           if (response) {
             refetch(); // Refetch the cart data

@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 const VenueCard = () => {
   const [venues, loading] = useVenue(); // Fetch venue data
   const [imageIndices, setImageIndices] = useState({}); // Store current image indices for all venues
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   if (loading) {
     return <p className="text-center text-white">Loading...</p>;
   }

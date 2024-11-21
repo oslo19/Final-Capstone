@@ -1,6 +1,7 @@
 import React from "react";
 
 const LoadingSpinner = () => {
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   return (
     <div className="loading-spinner">
       <div className="border border-blue-300 shadow rounded-md p-4 max-w-sm w-full mx-auto">

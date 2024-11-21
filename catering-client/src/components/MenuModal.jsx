@@ -22,6 +22,7 @@ const MenuModal = ({
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [filteredItems, setFilteredItems] = useState(menuItems);
   const [view, setView] = useState("custom"); 
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
     if (!showMenuModal) {
@@ -91,7 +92,7 @@ const MenuModal = ({
       };
   
       axios
-        .post("http://localhost:6001/booking-cart", bookingItem)
+        .post("${BASE_URL}/booking-cart", bookingItem)
         .then((response) => {
           if (response) {
             refetch();

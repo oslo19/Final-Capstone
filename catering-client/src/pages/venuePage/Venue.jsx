@@ -9,7 +9,7 @@ const Venue = () => {
   const [filteredVenues, setFilteredVenues] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isLeftArrowVisible, setIsLeftArrowVisible] = useState(false);
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   // Fetch venue data from the backend
   useEffect(() => {
     const fetchVenues = async () => {

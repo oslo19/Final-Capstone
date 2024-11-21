@@ -5,7 +5,7 @@ import useBookingVenueCart from "../hooks/useBookingVenueCart";
 
 const VenueCartPopover = ({ isVisible }) => {
   const [bookingVenueCart, refetch] = useBookingVenueCart();
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   useEffect(() => {
     refetch();
   }, [refetch]);
@@ -24,7 +24,7 @@ const VenueCartPopover = ({ isVisible }) => {
     }).then((result) => {
       if (result.isConfirmed) {
         axios
-          .delete(`http://localhost:6001/booking-venue-cart/${item._id}`)
+          .delete(`${BASE_URL}/booking-venue-cart/${item._id}`)
           .then((response) => {
             if (response) {
               refetch();

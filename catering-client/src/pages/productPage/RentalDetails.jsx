@@ -16,14 +16,14 @@ const RentalDetails = () => {
   const [rentalPrice, setRentalPrice] = useState(rental?.price || 0); // For updating the price based on days
   const [selectedDays, setSelectedDays] = useState(1);
   const [quantity, setQuantity] = useState(1);
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   useEffect(() => {
     const resetQuantity = async () => {
       // Ensure that product._id exists before making the API call
       if (rental && rental._id) {
         try {
           await fetch(
-            `http://localhost:6001/rental/reset-quantity/${rental._id}`,
+            `${BASE_URL}/rental/reset-quantity/${rental._id}`,
             {
               method: "PATCH",
             }
@@ -61,7 +61,7 @@ const RentalDetails = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:6001/rental/${rental._id}`,
+        `${BASE_URL}/rental/${rental._id}`,
         {
           method: "PATCH",
           headers: {
@@ -94,7 +94,7 @@ const RentalDetails = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:6001/rental/${rental._id}`,
+        `${BASE_URL}/rental/${rental._id}`,
         {
           method: "PATCH",
           headers: {
@@ -136,7 +136,7 @@ const RentalDetails = () => {
       console.log("Cart Item:", cartItem);
 
       axios
-        .post("http://localhost:6001/carts", cartItem)
+        .post(`${BASE_URL}/carts`, cartItem)
         .then((response) => {
           if (response) {
             refetch();
@@ -200,7 +200,7 @@ const RentalDetails = () => {
     // Send the updated quantity to the backend
     try {
       const response = await fetch(
-        `http://localhost:6001/rental/${rental._id}`,
+        `${BASE_URL}/rental/${rental._id}`,
         {
           method: "PATCH",
           headers: {
@@ -449,15 +449,9 @@ const RentalDetails = () => {
 
               <div className="flex flex-wrap gap-4 my-14">
                 <button
-                  type="button"
-                  className="min-w-[200px] px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded"
-                >
-                  Buy now
-                </button>
-                <button
                   onClick={() => handleAddToCart()}
                   type="button"
-                  className="min-w-[200px] px-4 py-2.5 border border-orange-500 bg-transparent hover:bg-gray-50 text-gray-800 text-sm font-semibold rounded"
+                  className="min-w-[200px] px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded"
                 >
                   Add to cart
                 </button>

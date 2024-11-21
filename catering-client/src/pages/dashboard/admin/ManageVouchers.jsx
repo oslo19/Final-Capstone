@@ -8,7 +8,7 @@ import useVoucher from "../../../hooks/useVoucher";
 const ManageVouchers = () => {
   const [vouchers, , refetch] = useVoucher();
   const axiosSecure = useAxiosSecure();
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   const handleDeleteItem = (item) => {
     Swal.fire({
       title: "Are you sure?",

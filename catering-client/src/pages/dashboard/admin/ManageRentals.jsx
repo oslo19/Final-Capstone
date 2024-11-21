@@ -8,6 +8,7 @@ import useAxiosSecure from "../../../hooks/useAxiosSecure";
 const ManageRentals = () => {
   const [rental, , refetch] = useRental();
   const axiosSecure = useAxiosSecure();
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 //   console.log(menu);
 
   //   handleDeleteItem

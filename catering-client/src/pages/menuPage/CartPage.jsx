@@ -15,7 +15,7 @@ const CartPage = () => {
   const [cart, refetch] = useCart();
   const [cartItems, setCartItems] = useState([]);
   const [discount, setDiscount] = useState(0);
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   const currentUser = users.find((u) => u.email === user.email);
 
   // Calculate the total price for each item in the cart
@@ -27,7 +27,7 @@ const CartPage = () => {
     const newQuantity = item.quantity + 1;
 
     try {
-      const response = await fetch(`http://localhost:6001/carts/${item._id}`, {
+      const response = await fetch(`${BASE_URL}/carts/${item._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ quantity: newQuantity }),
@@ -58,7 +58,7 @@ const CartPage = () => {
 
       try {
         const response = await fetch(
-          `http://localhost:6001/carts/${item._id}`,
+          `${BASE_URL}/carts/${item._id}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -107,7 +107,7 @@ const CartPage = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         axios
-          .delete(`http://localhost:6001/carts/${item._id}`)
+          .delete(`${BASE_URL}/carts/${item._id}`)
           .then((response) => {
             if (response) {
               refetch();
@@ -137,7 +137,7 @@ const CartPage = () => {
       // Update the server with quantity = 1
       try {
         const response = await fetch(
-          `http://localhost:6001/carts/${item._id}`,
+          `${BASE_URL}/carts/${item._id}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -175,7 +175,7 @@ const CartPage = () => {
 
     // Send the updated quantity to the backend
     try {
-      const response = await fetch(`http://localhost:6001/carts/${item._id}`, {
+      const response = await fetch(`${BASE_URL}/carts/${item._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ quantity: parsedQuantity }),

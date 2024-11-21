@@ -5,7 +5,7 @@ import { AuthContext } from '../contexts/AuthProvider';
 const useBookingRentalCart = () => {
     const { user } = useContext(AuthContext);
     const [token, setToken] = useState(null);
-
+    const BASE_URL = import.meta.env.VITE_BACKEND_URL;
     useEffect(() => {
         const storedToken = localStorage.getItem('access-token');
         if (storedToken) {
@@ -17,7 +17,7 @@ const useBookingRentalCart = () => {
         queryKey: ['booking-rental-cart', user?.email],
         enabled: !!user?.email && !!token,  // Run query only if user and token exist
         queryFn: async () => {
-            const res = await fetch(`http://localhost:6001/booking-rental-cart?email=${user.email}`, {
+            const res = await fetch(`${BASE_URL}/booking-rental-cart?email=${user.email}`, {
                 headers: {
                     authorization: `Bearer ${token}`,
                 },

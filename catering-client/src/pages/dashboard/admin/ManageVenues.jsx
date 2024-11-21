@@ -8,7 +8,7 @@ import useAxiosSecure from "../../../hooks/useAxiosSecure";
 const ManageVenues = () => {
   const [venues, , refetch] = useVenue();
   const axiosSecure = useAxiosSecure();
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   // Handle Delete Venue
   const handleDeleteVenue = (venue) => {
     Swal.fire({

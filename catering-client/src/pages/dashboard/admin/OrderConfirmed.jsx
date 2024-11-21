@@ -3,13 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 
 const OrderConfirmed = () => {
   const token = localStorage.getItem("access-token");
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   // Fetch confirmed orders
   const { data: confirmedOrders = [], isLoading, isError } = useQuery({
     queryKey: ["confirmedOrders"],
     queryFn: async () => {
       try {
-        const res = await fetch(`http://localhost:6001/orders?status=confirmed`, {
+        const res = await fetch(`${BASE_URL}/orders?status=confirmed`, {
           headers: {
             authorization: `Bearer ${token}`,
           },

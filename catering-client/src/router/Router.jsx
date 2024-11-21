@@ -166,22 +166,22 @@ const router = createBrowserRouter([
         {
           path: "update-menu/:id",
           element: <UpdateMenu/>,
-          loader: ({params}) => fetch(`http://localhost:6001/menu/${params.id}`)
+          loader: ({params}) => fetch(`${BASE_URL}/menu/${params.id}`)
         },
         {
           path: "update-rental/:id",
           element: <UpdateRental/>,
-          loader: ({params}) => fetch(`http://localhost:6001/rental/${params.id}`)
+          loader: ({params}) => fetch(`${BASE_URL}/rental/${params.id}`)
         },
         {
           path: "update-venues/:id",
           element: <UpdateVenue/>,
-          loader: ({params}) => fetch(`http://localhost:6001/venues/${params.id}`)
+          loader: ({params}) => fetch(`${BASE_URL}/venues/${params.id}`)
         },
         {
           path: "update-voucher/:id",
           element: <UpdateVoucher/>,
-          loader: ({params}) => fetch(`http://localhost:6001/voucher/${params.id}`)
+          loader: ({params}) => fetch(`${BASE_URL}/voucher/${params.id}`)
         },
       ]
     }

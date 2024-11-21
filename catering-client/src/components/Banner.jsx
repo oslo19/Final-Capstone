@@ -2,6 +2,7 @@ import React from "react";
 import bannerImg from "/images/home/bannerlogo.png";
 
 const Banner = () => {
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   return (
     
     <div className="max-w-screen-2xl container mx-auto xl:px-24 ">

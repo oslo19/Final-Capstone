@@ -6,7 +6,7 @@ const VoucherModal = ({ vouchers, cartSubtotal, onApplyVoucher, user }) => {
   const modalRef = useRef(null);
   const [filteredVouchers, setFilteredVouchers] = useState([]);
   const axiosSecure = useAxiosSecure();
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   useEffect(() => {
     const now = new Date().toISOString(); // Get current time in UTC format
   

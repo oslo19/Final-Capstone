@@ -9,7 +9,7 @@ import axios from 'axios';
 
 const RentalCards = ({ item }) => {
   const { name, image, price, recipe, _id } = item;
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   const {user} = useContext(AuthContext);
   const [cart, refetch] = useCart();
   const navigate = useNavigate();

@@ -5,7 +5,7 @@ import useBookingRentalCart from "../hooks/useBookingRentalCart";
 
 const RentalCartPopover = ({ isVisible }) => {
   const [bookingRentalCart, refetch] = useBookingRentalCart();
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   useEffect(() => {
     refetch();
   }, [refetch]);
@@ -22,7 +22,7 @@ const RentalCartPopover = ({ isVisible }) => {
 
     try {
       const response = await axios.put(
-        `http://localhost:6001/booking-rental-cart/${item._id}`,
+        `${BASE_URL}/booking-rental-cart/${item._id}`,
         {
           quantity,
         }
@@ -50,7 +50,7 @@ const RentalCartPopover = ({ isVisible }) => {
     }).then((result) => {
       if (result.isConfirmed) {
         axios
-          .delete(`http://localhost:6001/booking-rental-cart/${item._id}`)
+          .delete(`${BASE_URL}/booking-rental-cart/${item._id}`)
           .then((response) => {
             if (response.status === 200) {
               refetch();
@@ -77,7 +77,7 @@ const RentalCartPopover = ({ isVisible }) => {
       if (result.isConfirmed) {
         Promise.all(
           bookingRentalCart.map((item) =>
-            axios.delete(`http://localhost:6001/booking-rental-cart/${item._id}`)
+            axios.delete(`${BASE_URL}/booking-rental-cart/${item._id}`)
           )
         )
           .then(() => {

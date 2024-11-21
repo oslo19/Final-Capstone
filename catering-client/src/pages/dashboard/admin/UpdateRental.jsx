@@ -14,7 +14,7 @@ const UpdateRental = () => {
     const { register, handleSubmit, reset } = useForm();
     const axiosPublic = useAxiosPublic();
     const axiosSecure = useAxiosSecure();
-
+    const BASE_URL = import.meta.env.VITE_BACKEND_URL;
     const navigate = useNavigate()
   
     const cloudinaryUploadUrl = `https://api.cloudinary.com/v1_1/dtg6ofu1q/image/upload`;

@@ -2,7 +2,7 @@ import React from 'react'
 import useAuth from './useAuth'
 import useAxiosSecure from './useAxiosSecure';
 import { useQuery } from '@tanstack/react-query';
-
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const useAdmin = () => {
     const {user} = useAuth();
     const axiosSecure = useAxiosSecure();

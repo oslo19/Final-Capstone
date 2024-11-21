@@ -68,7 +68,7 @@ const Signup = () => {
   
         // Saving the user info to the backend
         axios
-          .post("http://localhost:6001/users", userInfo)
+          .post("${BASE_URL}/users", userInfo)
           .then(() => {
             alert("Signup successful!");
             navigate(from, { replace: true });

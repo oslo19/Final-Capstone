@@ -7,13 +7,13 @@ import { Link } from 'react-router-dom';
 const Order = () => {
   const { user } = useAuth();
   const token = localStorage.getItem('access-token')
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 
   const { refetch, data: orders = [] } = useQuery({
       queryKey: ['orders', user?.email],
       queryFn: async () => {
-          const res = await fetch(`http://localhost:6001/orders?email=${user?.email}`, {
+          const res = await fetch(`${BASE_URL}/orders?email=${user?.email}`, {
               headers: {
                   authorization: `Bearer ${token}`
               }

@@ -9,7 +9,7 @@ const AddVenue = () => {
   const { register, handleSubmit, reset } = useForm();
   const axiosPublic = useAxiosPublic();
   const axiosSecure = useAxiosSecure();
-
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   // Image hosting key
   const image_hosting_key = import.meta.env.VITE_IMAGE_HOSTING_KEY;
   const image_hosting_api = `https://api.imgbb.com/1/upload?key=${image_hosting_key}`;

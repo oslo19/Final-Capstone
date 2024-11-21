@@ -3,7 +3,7 @@ import useAxiosPublic from './useAxiosPublic';
 
 const useProduct = (id) => {
     const axiosPublic = useAxiosPublic();
-
+    const BASE_URL = import.meta.env.VITE_BACKEND_URL;
     const { data: product = {}, isPending: loading, refetch } = useQuery({
         queryKey: ['product', id],
         queryFn: async () => {

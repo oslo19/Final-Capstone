@@ -6,7 +6,7 @@ import Swal from "sweetalert2";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 
 const ManageItems = () => {
-  
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   const [menu, , refetch] = useMenu();
   const axiosSecure = useAxiosSecure();
 //   console.log(menu);
