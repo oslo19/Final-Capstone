@@ -11,7 +11,7 @@ const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 export const AuthContext = createContext();
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
-
+console.log('Firebase Auth initialized:', auth);
 const AuthProvider = ({children}) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);

@@ -48,7 +48,8 @@
     "sort-by": "^0.0.2",
     "sweetalert2": "^11.6.13",
     "swiper": "^11.0.4",
-    "use-places-autocomplete": "^4.0.1"
+    "use-places-autocomplete": "^4.0.1",
+    "uuid": "^11.0.3"
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.12",

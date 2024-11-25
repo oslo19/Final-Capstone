@@ -55,10 +55,7 @@ const Profile = ({ user }) => {
               <a href="/update-profile">Profile</a>
             </li>
             <li>
-              <a href="/order">Order</a>
-            </li>
-            <li>
-              <a>Settings</a>
+              <a href="/order-tracking/:transactionId">Order</a>
             </li>
             {currentUser?.role === "admin" && (
               <li>

@@ -36,7 +36,7 @@ const OnlineBooking = () => {
   const [typeOfEvent, setTypeOfEvent] = useState("");
   const [numberOfPax, setNumberOfPax] = useState(MINIMUM_PAX);
   const BASE_URL = import.meta.env.VITE_BACKEND_URL;
-  console.log(venue);
+  
 
   const handleTypeOfEventChange = (event) => {
     setTypeOfEvent(event.target.value);
@@ -131,15 +131,15 @@ const OnlineBooking = () => {
 
   return (
     <div className="max-w-screen-2xl container mx-auto xl:px-24 px-4">
-      <div className="py-10 flex flex-col items-center justify-center"></div>
-      <div className="w-full py-48 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8">
-        <h1 className="font-bold text-2xl text-black flex-1 text-center">
+      <div className="py-10 flex flex-col items-center justify-center">
+      <div className="w-full py-12 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8 my-10">
+      <h1 className="font-bold text-xl md:text-2xl text-black text-center">
           Catering Order Form
         </h1>
         <div className="relative mx-auto mt-4">
           <select
             id="countries"
-            className="block w-full px-2.5 pb-2.5 pt-4 text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
+            className="block w-full px-2.5 pb-2.5 pt-4 text-sm text-black bg-transparent rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black"
             value={typeOfEvent}
             onChange={handleTypeOfEventChange}
           >
@@ -155,7 +155,7 @@ const OnlineBooking = () => {
 
           <label
             htmlFor="countries"
-            className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
+            className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4"
           >
             Type of Event
           </label>
@@ -165,24 +165,24 @@ const OnlineBooking = () => {
           <input
             type="number"
             id="numberOfPax"
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
+            className="block w-full px-2.5 pb-2.5 pt-4 text-sm text-black bg-transparent rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black"
             value={numberOfPax}
             onChange={handleNumberOfPaxChange}
             onBlur={handleNumberOfPaxBlur} // Validate on blur
           />
           <label
             htmlFor="numberOfPax"
-            className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 start-2 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
+            className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4"
           >
             Number of Pax (Minimum {MINIMUM_PAX})
           </label>
         </div>
 
-        <div className="relative mx-auto mt-4">
+        <div className="relative mt-4">
           <select
-            id="countries"
+            id="menuType"
             onChange={handleMenuTypeChange}
-            className="block w-full px-2.5 pb-2.5 pt-4 text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
+            className="block w-full px-2.5 pb-2.5 pt-4 text-sm text-black bg-transparent rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black"
             defaultValue="" // Sets default selected option
           >
             <option value="" disabled>
@@ -194,14 +194,14 @@ const OnlineBooking = () => {
 
           <label
             htmlFor="countries"
-            className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
+            className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4"
           >
             Type of Menu
           </label>
         </div>
         <button
           onClick={handleMenuToggleModal}
-          className="block text-white bg-prime hover:bg-orange-800 focus:ring-4 focus:outline-none focus:ring-gray-300 my-4 font-medium rounded-lg text-sm px-5 py-2.5 text-center "
+          className="block w-full text-white bg-prime hover:bg-orange-800 focus:ring-4 focus:outline-none focus:ring-gray-300 my-4 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
         >
           SHOW MENU
         </button>
@@ -217,11 +217,11 @@ const OnlineBooking = () => {
         <div className="mt-8">
           <h2 className="text-lg font-semibold mb-4">Current Booking Menu</h2>
           {bookingCart.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {bookingCart.map((item, index) => (
                 <div key={index} className="w-full max-w-xs mx-auto">
                   <div className="rounded-xl  bg-gray-100 border border-gray-200 flex flex-col items-center gap-3 transition-all duration-500 hover:border-gray-400">
-                    <div className="img-box w-24 h-24">
+                    <div className="rounded-lg bg-gray-100 border border-gray-200 flex flex-col items-center gap-3 p-4 hover:shadow-lg">
                       <img
                         src={item.image}
                         alt={item.name}
@@ -247,7 +247,7 @@ const OnlineBooking = () => {
         <div className="divider"></div>
         <button
           onClick={handleAmenitiesToggleModal}
-          className="block text-white bg-prime hover:bg-orange-800 focus:ring-4 focus:outline-none focus:ring-gray-300 my-6 font-medium rounded-lg text-sm px-5 py-2.5 text-center "
+          className="block w-full text-white bg-prime hover:bg-orange-800 focus:ring-4 focus:outline-none focus:ring-gray-300 my-4 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
         >
           SHOW AMENITIES
         </button>
@@ -265,17 +265,17 @@ const OnlineBooking = () => {
             Current Booking Amenities
           </h2>
           {bookingRentalCart.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {bookingRentalCart.map((item, index) => (
                 <div key={index} className="w-full max-w-xs mx-auto">
-                  <div className="rounded-xl  bg-gray-100 border border-gray-200 flex flex-col items-center gap-3 transition-all duration-500 hover:border-gray-400">
-                    <div className="img-box w-24 h-24">
+                  <div className="rounded-lg bg-gray-100 border border-gray-200 flex flex-col items-center gap-3 p-4 hover:shadow-lg">
+                    
                       <img
                         src={item.image}
                         alt={item.name}
                         className="w-full h-full rounded-lg object-cover"
                       />
-                    </div>
+                    
                     <div className="text-center">
                       <h2 className="font-medium text-md text-black mb-1">
                         {item.name}
@@ -295,7 +295,7 @@ const OnlineBooking = () => {
         <div className="divider"></div>
         <button
           onClick={handleVenueToggleModal}
-          className="block text-white bg-prime hover:bg-orange-800 focus:ring-4 focus:outline-none focus:ring-gray-300 my-6 font-medium rounded-lg text-sm px-5 py-2.5 text-center "
+          className="block w-full text-white bg-prime hover:bg-orange-800 focus:ring-4 focus:outline-none focus:ring-gray-300 my-4 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
         >
           SHOW VENUE
         </button>
@@ -311,14 +311,14 @@ const OnlineBooking = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
               {bookingVenueCart.map((item, index) => (
                 <div key={index} className="w-full max-w-xs mx-auto">
-                  <div className="rounded-xl  bg-gray-100 border border-gray-200 flex flex-col items-center gap-3 transition-all duration-500 hover:border-gray-400">
-                    <div className="img-box w-24 h-24">
+                  <div className="rounded-lg bg-gray-100 border border-gray-200 flex flex-col items-center gap-3 p-4 hover:shadow-lg">
+                    
                       <img
                         src={item.images}
                         alt={item.venueName}
                         className="w-full h-full rounded-lg object-cover"
                       />
-                    </div>
+                    
                     <div className="text-center">
                       <h2 className="font-medium text-md text-black mb-1">
                         {item.venueName}
@@ -336,10 +336,10 @@ const OnlineBooking = () => {
           )}
         </div>
 
-        <div className="flex justify-end mt-4">
+        <div className="flex justify-end mt-8">
           <button
             type="submit"
-            className="bg-prime text-white rounded-lg px-6 py-2 mt-4 w-full"
+            className="bg-prime text-white rounded-lg px-6 py-2 mt-4 w-full md:w-auto"
             onClick={handleProceedToCheckout}
           >
             Proceed to Checkout
@@ -347,6 +347,7 @@ const OnlineBooking = () => {
         </div>
       </div>
     </div>
+  </div>
   );
 };
 

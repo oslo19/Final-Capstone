@@ -112,22 +112,27 @@ const VenueModal = ({ handleVenueToggleModal, showVenueModal, venueItems }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl w-[90%] h-[90%] m-4 overflow-hidden z-50 mt-9">
-        <h3 className="text-2xl leading-6 font-medium text-gray-900 text-center">
+      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl w-[90%] md:w-[80%] lg:w-[70%] xl:w-[60%] h-[90%] max-h-[90vh] m-4 overflow-hidden z-50 flex flex-col">
+        <h3 className="text-2xl leading-6 font-medium text-gray-900 text-center py-4 border-b border-gray-200">
           Venue Items
         </h3>
 
         {/* Filter Section */}
-        <div className="flex items-end mr-40">
-          <select
-            className="select w-full max-w-xs"
-            onChange={handleCategoryChange}
-          >
-            <option value="all">All</option>
-            <option value="conference">Conference</option>
-            <option value="banquet">Banquet</option>
-            {/* Add other venue categories here */}
-          </select>
+        <div className="flex flex-wrap items-center justify-between px-4 py-4 border-b border-gray-200 gap-4">
+          <div className="w-full md:w-1/2 lg:w-1/3">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Filter by Category
+            </label>
+            <select
+              className="w-full p-2 border rounded-md text-sm"
+              onChange={handleCategoryChange}
+            >
+              <option value="all">All</option>
+              <option value="conference">Conference</option>
+              <option value="banquet">Banquet</option>
+              {/* Add other venue categories here */}
+            </select>
+          </div>
         </div>
 
         {/* Venue Items */}
@@ -135,14 +140,14 @@ const VenueModal = ({ handleVenueToggleModal, showVenueModal, venueItems }) => {
           className="prose p-6 overflow-y-auto"
           style={{ maxHeight: "50vh" }}
         >
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredItems.map((item, index) => (
               <div
                 key={index}
-                className="relative m-4 flex w-full max-w-xs flex-col overflow-hidden rounded-lg border bg-white shadow-md"
+                className="relative flex flex-col overflow-hidden rounded-lg border bg-white shadow-md"
               >
                 <a
-                  className="relative mx-3 mt-3 h-60 overflow-hidden rounded-xl flex justify-center"
+                  className="relative mx-3 mt-3 h-40 sm:h-60 overflow-hidden rounded-xl flex justify-center"
                   href="#"
                 >
                   <img
