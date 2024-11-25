@@ -5,6 +5,8 @@ const cors = require("cors");
 const port = process.env.PORT || 6001;
 const mongoose = require("mongoose");
 const jwt = require('jsonwebtoken');
+const path = require("path");
+const fs = require("fs");
 require('dotenv').config()
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const corsOptions = {
@@ -17,7 +19,10 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-
+const contractsDir = path.resolve(__dirname, "./uploads/contracts");
+if (!fs.existsSync(contractsDir)) {
+  fs.mkdirSync(contractsDir, { recursive: true });
+}
 
 // mongodb configuration using mongoose
 
@@ -54,6 +59,7 @@ const bookingVenueCartRoutes = require('./api/routes/bookingVenueCartRoutes');
 const packageRoutes = require('./api/routes/packageRoutes');
 const otpRoutes = require('./api/routes/otpRoutes');
 const orderRoutes = require('./api/routes/orderRoutes');  
+const contractRoutes = require("./api/routes/contractRoutes");
 app.use('/menu', menuRoutes)
 app.use('/carts', cartRoutes);
 app.use('/users', userRoutes);
@@ -67,6 +73,7 @@ app.use('/packages', packageRoutes);
 app.use('/venues', venueRoutes);
 app.use('/otp', otpRoutes); 
 app.use('/orders', orderRoutes); 
+app.use("/contracts", contractRoutes);
 
 
 

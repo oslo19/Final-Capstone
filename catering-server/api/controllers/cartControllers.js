@@ -52,19 +52,19 @@ const addToCart = async (req, res) => {
 
 
 // delete a cart item
-const deleteCart =  async (req, res) => {
+const deleteCart = async (req, res) => {
     const cartId = req.params.id;
     try {
         const deletedCart = await Carts.findByIdAndDelete(cartId);
-        if(!deletedCart){
-            return res.status(401).json({message: "Cart Items not found!"})
+        if (!deletedCart) {
+            return res.status(404).json({ message: "Cart Item not found!" });
         }
-        res.status(200).json({message: "Cart Item Deleted Successfully!"})
-        
+        res.status(200).json({ message: "Cart Item Deleted Successfully!" });
     } catch (error) {
-        res.status(500).json({message: error.message});
+        res.status(500).json({ message: error.message });
     }
 };
+
 
 // updata a cart item
 const updateCart = async (req, res) => {
@@ -98,11 +98,10 @@ const getSingleCart = async (req, res) => {
 };
 
 
-
 module.exports = {
     getCartByEmail,
     addToCart,
     deleteCart,
     updateCart,
-    getSingleCart
+    getSingleCart,
 }

@@ -34,6 +34,12 @@ const userSchema = new Schema({
         type: Boolean,
         default: false, 
     },
+    contracts: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Contract",
+        },
+      ],
 });
 
 // create a model instance
