@@ -62,60 +62,96 @@ const DashboardLayout = () => {
         </div>
       </div>
       <div className="drawer-side">
-        <label
-          htmlFor="my-drawer-2"
-          aria-label="close sidebar"
-          className="drawer-overlay"
-        ></label>
-        <ul className="menu p-4 w-80 min-h-full bg-base-200 text-base-content">
-          {/* Sidebar content here */}
-          <li>
-            <Link to="/dashboard" className="flex justify-start mb-3">
-              <img  alt="" className="w-6" />
-              <span className="badge badge-primary">ADMIN DASHBOARD</span>
-            </Link>
-          </li>
-          <hr />
-          <li className="mt-3">
-            <Link to="/dashboard">
-              <MdDashboard /> Dashboard
-            </Link>
-          </li>
+  <label htmlFor="my-drawer-2" aria-label="close sidebar" className="drawer-overlay"></label>
+  <ul className="menu p-4 w-80 min-h-full bg-base-200 text-base-content">
+    {/* Sidebar content here */}
+    <li>
+      <Link to="/dashboard" className="flex justify-start mb-3">
+        <img alt="" className="w-6" />
+        <span className="badge badge-primary">ADMIN DASHBOARD</span>
+      </Link>
+    </li>
+    <hr />
+    <li className="mt-3">
+      <Link to="/dashboard">
+        <MdDashboard /> Dashboard
+      </Link>
+    </li>
+
+    {/* Add Items Dropdown */}
+    <li>
+      <details>
+        <summary className="cursor-pointer">
+          <FaPlusCircle /> Add Items
+        </summary>
+        <ul className="pl-4">
           <li>
             <Link to="/dashboard/add-menu">
-              <FaPlusCircle />
-              Add Menu
+              <FaPlusCircle /> Add Menu
             </Link>
           </li>
           <li>
             <Link to="/dashboard/add-package">
-              <FaPlusCircle />
-              Add Food Package
+              <FaPlusCircle /> Add Food Package
             </Link>
           </li>
           <li>
             <Link to="/dashboard/add-rental">
-              <FaPlusCircle />
-              Add Rental
+              <FaPlusCircle /> Add Rental
             </Link>
           </li>
           <li>
             <Link to="/dashboard/add-venue">
-              <FaPlusCircle />
-              Add Venue
+              <FaPlusCircle /> Add Venue
             </Link>
           </li>
           <li>
             <Link to="/dashboard/add-voucher">
-              <FaPlusCircle />
-              Add Voucher
+              <FaPlusCircle /> Add Voucher
+            </Link>
+          </li>
+        </ul>
+      </details>
+    </li>
+
+    {/* Bookings Dropdown */}
+    <li>
+      <details>
+        <summary className="cursor-pointer">
+          <FaShoppingBag /> Bookings
+        </summary>
+        <ul className="pl-4">
+        <li>
+            <Link to="/dashboard/pending-bookings">
+              <FaShoppingBag /> Pending Bookings
             </Link>
           </li>
           <li>
-            <Link to="/dashboard/manage-bookings">
-              <FaShoppingBag /> Manage Bookings
+            <Link to="/dashboard/confirm-bookings">
+              <FaShoppingBag /> Confirm Bookings
             </Link>
           </li>
+          <li>
+            <Link to="/dashboard/completed-bookings">
+              <FaShoppingBag /> Completed Bookings
+            </Link>
+          </li>
+          <li>
+            <Link to="/dashboard/cancelled-bookings">
+              <FaShoppingBag /> Cancelled Bookings
+            </Link>
+          </li>
+        </ul>
+      </details>
+    </li>
+
+      {/* Manage Dropdown */}
+    <li>
+      <details>
+        <summary className="cursor-pointer">
+          <FaEdit /> Manage
+        </summary>
+        <ul className="pl-4">
           <li>
             <Link to="/dashboard/manage-items">
               <FaEdit /> Manage Foods
@@ -136,25 +172,21 @@ const DashboardLayout = () => {
               <FaEdit /> Manage Vouchers
             </Link>
           </li>
-          <li className="">
-            <Link to="/dashboard/orderconfirmed">
-              <FaUser /> Booking Confirmed
-            </Link>
-          </li>
-          <li className="">
+          <li>
             <Link to="/dashboard/users">
-              <FaUser /> All Users
+              <FaUser /> Manage Users
             </Link>
           </li>
-          <hr />
-      
-
-          {/* shared nav links */}
-          {
-              sharedLinks
-          }
         </ul>
-      </div>
+      </details>
+    </li>
+    <hr />
+
+    {/* Shared Nav Links */}
+    {sharedLinks}
+  </ul>
+</div>
+
     </div> : (loading ? <Login/> : <div className="h-screen flex justify-center items-center"><Link to="/"><button className="btn bg-prime text-white">Back to Home</button></Link></div>)
     }
     </div>

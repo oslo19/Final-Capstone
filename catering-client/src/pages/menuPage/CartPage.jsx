@@ -57,14 +57,11 @@ const CartPage = () => {
       const newQuantity = item.quantity - 1;
 
       try {
-        const response = await fetch(
-          `${BASE_URL}/carts/${item._id}`,
-          {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ quantity: newQuantity }),
-          }
-        );
+        const response = await fetch(`${BASE_URL}/carts/${item._id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quantity: newQuantity }),
+        });
 
         if (response.ok) {
           const updatedItem = await response.json();
@@ -136,14 +133,11 @@ const CartPage = () => {
 
       // Update the server with quantity = 1
       try {
-        const response = await fetch(
-          `${BASE_URL}/carts/${item._id}`,
-          {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ quantity: 1 }),
-          }
-        );
+        const response = await fetch(`${BASE_URL}/carts/${item._id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quantity: 1 }),
+        });
 
         if (response.ok) {
           await refetch(); // Sync with server data
@@ -194,14 +188,13 @@ const CartPage = () => {
   return (
     <div className="max-w-screen-2xl container mx-auto xl:px-24 px-4">
       {/* banner */}
-      <div className="">
-        <div className="py-28 flex flex-col items-center justify-center">
-          {/* content */}
-          <div className=" text-center px-4 space-y-7">
-            <h2 className="md:text-5xl text-4xl font-bold md:leading-snug leading-snug text-white">
-              Items Added to The<span className="text-prime"> Cart</span>
-            </h2>
-          </div>
+
+      <div className="py-28 flex flex-col items-center justify-center">
+        {/* content */}
+        <div className="text-center px-4 space-y-7">
+          <h2 className="md:text-5xl text-4xl font-bold md:leading-snug leading-snug text-white">
+            Items Added to The<span className="text-prime"> Cart</span>
+          </h2>
         </div>
       </div>
 
@@ -211,21 +204,21 @@ const CartPage = () => {
         {cart.length > 0 ? (
           <div className="flex flex-col lg:flex-row lg:space-x-6">
             {/* Cart Items */}
-            <div className="w-full lg:w-3/4">
+            <div className="w-full lg:w-3/4 space-y-6">
               {cart.map((item, index) => (
                 <div
                   key={index}
-                  className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 md:p-6 mb-6"
+                  className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm md:p-6 mb-6"
                 >
                   <div className="space-y-4 md:flex md:items-center md:justify-between md:gap-6 md:space-y-0">
                     {/* Image */}
-                    <a href="#" className="shrink-0 md:order-1">
+                    <div className="shrink-0 md:order-1 text-center">
                       <img
                         className="h-20 w-20"
                         src={item.image}
                         alt={item.name}
                       />
-                    </a>
+                    </div>
 
                     {/* Quantity Buttons */}
                     <div className="flex items-center justify-between md:order-3 md:justify-end">
@@ -371,12 +364,12 @@ const CartPage = () => {
             </div>
 
             {/* Order Summary */}
-            <div className="mx-auto mt-6 max-w-4xl flex-1 space-y-6 lg:mt-0 lg:w-1/4">
+            <div className="mx-auto mt-6 max-w-md flex-1 space-y-6 lg:mt-0 lg:w-auto">
               <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
                 <div className="space-y-4">
                   <dl className="flex items-center justify-between gap-4  border-gray-200 pt-2 border-t-2">
                     <dt className="text-xl font-bold text-gray-900 dark:text-white">
-                      Total ({cart.length} item)
+                      Total ({cart.length} item{cart.length > 1 ? "s" : ""})
                     </dt>
                     <dd className="text-2xl font-bold text-gray-900 dark:text-white">
                       ₱{orderTotal.toFixed(2)}
@@ -386,7 +379,6 @@ const CartPage = () => {
 
                 <button
                   onClick={handleProceedToCheckout}
-                  href="#"
                   className="flex w-full items-center justify-center rounded-lg bg-prime px-5 py-2.5 text-sm font-medium text-white hover:bg-orange-700 my-3"
                 >
                   Proceed to Checkout

@@ -87,13 +87,13 @@ const Menu = () => {
     <div>
       {/* menu banner */}
       <div className="max-w-screen-2xl container mx-auto xl:px-24 px-4">
-        <div className="py-48 flex flex-col items-center justify-center">
+      <div className="py-24 md:py-48 flex flex-col items-center justify-center bg-cover bg-center">
           {/* content */}
-          <div className=" text-center px-4 space-y-7">
-            <h2 className="md:text-5xl text-4xl font-bold md:leading-snug leading-snug text-white">
+          <div className="text-center px-4 space-y-5 md:space-y-7">
+          <h2 className="text-3xl md:text-5xl font-bold leading-snug text-white">
               For the Love of Delicious <span className="text-prime">Food</span>
             </h2>
-            <p className="text-white text-xl md:w-4/5 mx-auto">
+            <p className="text-white text-base md:text-xl max-w-2xl mx-auto">
               Come with family & feel the joy of mouthwatering food such as
               Greek Salad, Lasagne, Butternut Pumpkin, Tokusen Wagyu, Olivas
               Rellenas and more for a moderate cost
@@ -104,75 +104,43 @@ const Menu = () => {
 
       {/* menu shop  */}
       <div className="section-container">
-        <div className="flex flex-col md:flex-row flex-wrap md:justify-between items-center space-y-3 mb-8">
+      <div className="flex flex-col md:flex-row flex-wrap md:justify-between items-center space-y-3 mb-8">
           
            {/* all category buttons */}
-          <div className="flex flex-row justify-start md:items-center md:gap-8 gap-4  flex-wrap text-white">
-            <button
-              onClick={showAll}
-              className={selectedCategory === "all" ? "active" : ""}
-            >
-              All
-            </button>
-            <button
-              onClick={() => filterItems("appetizers")}
-              className={selectedCategory === "appetizers" ? "active" : ""}
-            >
-              Appetizer
-            </button>
-            <button
-              onClick={() => filterItems("pork")}
-              className={selectedCategory === "pork" ? "active" : ""}
-            >
-              Pork
-            </button>
-            <button
-              onClick={() => filterItems("chicken")}
-              className={selectedCategory === "chicken" ? "active" : ""}
-            >
-              Chicken
-            </button>
-            <button
-              onClick={() => filterItems("seafoods")}
-              className={selectedCategory === "seafoods" ? "active" : ""}
-            >
-              Seafoods
-            </button>
-            <button
-              onClick={() => filterItems("beef")}
-              className={selectedCategory === "beef" ? "active" : ""}
-            >
-              Beef
-            </button>
-            <button
-              onClick={() => filterItems("noodles")}
-              className={selectedCategory === "noodles" ? "active" : ""}
-            >
-             Noodles/Pasta
-            </button>
-            <button
-              onClick={() => filterItems("vegies")}
-              className={selectedCategory === "vegies" ? "active" : ""}
-            >
-              Vegies/Others
-            </button>
-            <button
-              onClick={() => filterItems("dessert")}
-              className={selectedCategory === "dessert" ? "active" : ""}
-            >
-              Dessert
-            </button>
-            <button
-              onClick={() => filterItems("rice")}
-              className={selectedCategory === "rice" ? "active" : ""}
-            >
-              Rice
-            </button>
-          </div>
+           <div className="flex flex-wrap gap-3 text-white">
+        {[
+          "All",
+          "Appetizer",
+          "Pork",
+          "Chicken",
+          "Seafoods",
+          "Beef",
+          "Noodles/Pasta",
+          "Vegies/Others",
+          "Dessert",
+          "Rice",
+        ].map((category, index) => (
+          <button
+            key={index}
+            onClick={
+              category === "All"
+                ? showAll
+                : () => filterItems(category.toLowerCase())
+            }
+            className={`px-4 py-2 rounded-full ${
+              selectedCategory === category.toLowerCase()
+                ? "bg-prime text-white"
+                : "bg-gray-700 text-gray-200"
+            }`}
+          >
+            {category}
+          </button>
+        ))}
+      </div>
 
             {/* filter options */}
-          <div className="flex justify-end mb-4 rounded-sm">
-            <div className="bg-black p-2 ">
+            <div className="flex items-center space-x-2">
+            <div className="bg-black p-2 rounded-md">
               <FaFilter className="text-white h-4 w-4" />
             </div>
             <select
@@ -191,7 +159,7 @@ const Menu = () => {
         </div>
 
         {/* product card */}
-        <div className="grid md:grid-cols-4 sm:grid-cols-2 grid-cols-1 gap-4 ">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {currentItems.map((item, index) => (
             <Cards key={index} item={item} />
             
@@ -201,7 +169,7 @@ const Menu = () => {
       </div>
 
        {/* Pagination */}
-       <div className="flex justify-center my-8 flex-wrap gap-2">
+       <div className="flex justify-center my-8 gap-2 flex-wrap">
         {Array.from({ length: Math.ceil(filteredItems.length / itemsPerPage) }).map((_, index) => (
           <button
             key={index + 1}

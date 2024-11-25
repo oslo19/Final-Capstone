@@ -84,7 +84,7 @@ const Venue = () => {
   
   return (
     <div className="bg-gradient-to-r from-gray-900 via-gray-900 to-gray-950">
-      <div className="relative w-full flex items-center mt-14">
+      <div className="relative w-full flex items-center mt-20">
         {/* Sticky "All Venues" */}
         <div className="flex items-center space-x-2 pr-4 border-r border-gray-300">
           <div className="flex flex-col items-center min-w-max">

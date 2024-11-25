@@ -16,58 +16,77 @@ const AmenitiesModal = ({
 }) => {
   const { user } = useContext(AuthContext);
   const { id } = useParams();
-  const [isBookingRentalCartPopoverVisible, setBookingRentalCartPopoverVisible] = useState(false);
-  const [bookingRentalCart, refetch] = useBookingRentalCart(); 
+  const [
+    isBookingRentalCartPopoverVisible,
+    setBookingRentalCartPopoverVisible,
+  ] = useState(false);
+  const [bookingRentalCart, refetch] = useBookingRentalCart();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [filteredItems, setFilteredItems] = useState(rentalItems);
   const [hasAddedToCart, setHasAddedToCart] = useState(false);
   const BASE_URL = import.meta.env.VITE_BACKEND_URL;
-  
-  useEffect(() => {
-    if (showAmenitiesModal && !hasAddedToCart && rentalItems.length > 0) {
-      rentalItems.forEach((item) => {
-        const quantity = calculateQuantity(item, pax);
+  const [manualAdjustments, setManualAdjustments] = useState({});
 
-        // Check if item already exists in the cart
-        const isInCart = bookingRentalCart.some(
+  useEffect(() => {
+    if (showAmenitiesModal && rentalItems.length > 0) {
+      rentalItems.forEach((item) => {
+        const calculatedQuantity = calculateQuantity(item, pax);
+
+        const existingItem = bookingRentalCart.find(
           (cartItem) => cartItem.rentalItemId === item._id
         );
 
-        if (!isInCart && quantity > 0) {
+        // Skip if the item has been manually adjusted
+        if (manualAdjustments[item._id]) return;
+
+        if (existingItem) {
+          if (existingItem.quantity !== calculatedQuantity) {
+            // Update quantity only if it differs
+            axios
+              .put(`${BASE_URL}/booking-rental-cart/${existingItem._id}`, {
+                quantity: calculatedQuantity,
+              })
+              .then(() => refetch())
+              .catch((error) => console.error("Error updating item:", error));
+          }
+        } else if (calculatedQuantity > 0) {
+          // Add item if it doesn't exist in the cart
           axios
             .post(`${BASE_URL}/booking-rental-cart`, {
               email: user.email,
               rentalItemId: item._id,
               name: item.name,
               price: item.price,
-              quantity: quantity,
+              quantity: calculatedQuantity,
               image: item.image,
             })
             .then(() => refetch())
-            .catch((error) => console.error(error));
+            .catch((error) => console.error("Error adding item:", error));
         }
       });
-
-      // Mark items as added
-      setHasAddedToCart(true);
     }
-  }, [showAmenitiesModal, rentalItems, pax, bookingRentalCart, hasAddedToCart, refetch]);
+  }, [
+    showAmenitiesModal,
+    pax,
+    rentalItems,
+    bookingRentalCart,
+    manualAdjustments,
+    refetch,
+  ]);
 
-  
   useEffect(() => {
-    if (showAmenitiesModal) {
-      document.body.classList.add("overflow-hidden");
-      setFilteredItems(rentalItems);
-    } else {
-      document.body.classList.remove("overflow-hidden");
+    if (!showAmenitiesModal) {
+      setManualAdjustments({});
     }
-  }, [showAmenitiesModal, rentalItems]);
+  }, [showAmenitiesModal]);
 
   const filterItems = (category) => {
     const filtered =
       category === "all"
         ? rentalItems
-        : rentalItems.filter((item) => item.category.toLowerCase() === category.toLowerCase());
+        : rentalItems.filter(
+            (item) => item.category.toLowerCase() === category.toLowerCase()
+          );
     setFilteredItems(filtered);
   };
 
@@ -81,56 +100,46 @@ const AmenitiesModal = ({
     setSelectedCategory(event.target.value);
   };
 
-  const handleAddToCart = (item) => {
-    const quantity = calculateQuantity(item, pax); // Calculate quantity based on pax
-    const totalPrice = item.price * quantity;
-  
-    if (user && user.email) {
-      const rentalItem = {
-        email: user.email,
-        rentalItemId: item._id,
-        name: item.name,
-        price: item.price,
-        quantity: quantity,
-        totalPrice: totalPrice,
-        image: item.image,
-      };
-  
+  const handleAddToCart = (item, manualQuantity = 1) => {
+    // Check if the item already exists in the cart
+    const existingItem = bookingRentalCart.find(
+      (cartItem) => cartItem.rentalItemId === item._id
+    );
+
+    if (existingItem) {
+      Swal.fire({
+        icon: "info",
+        title: `${item.name} is already in the cart.`,
+        timer: 1500,
+      });
+      return; // Stop further execution if the item is already in the cart
+    }
+
+    // Ensure quantity is valid (greater than 0)
+    if (manualQuantity > 0) {
       axios
-        .post(`${BASE_URL}/booking-rental-cart`, rentalItem)
-        .then((response) => {
-          if (response) {
-            refetch();
-            Swal.fire({
-              position: "center",
-              icon: "success",
-              title: `${item.name} added to the cart with quantity: ${quantity}`,
-              showConfirmButton: false,
-              timer: 1500,
-            });
-          }
+        .post(`${BASE_URL}/booking-rental-cart`, {
+          email: user.email,
+          rentalItemId: item._id,
+          name: item.name,
+          price: item.price,
+          quantity: manualQuantity,
+          image: item.image,
         })
-        .catch((error) => {
+        .then(() => {
+          refetch(); // Refresh the cart
           Swal.fire({
-            position: "center",
-            icon: "warning",
-            title: error.response?.data?.message || "An error occurred",
-            showConfirmButton: false,
+            icon: "success",
+            title: `${item.name} has been added to the cart.`,
             timer: 1500,
           });
-        });
+        })
+        .catch((error) => console.error("Error adding item to cart:", error));
     } else {
       Swal.fire({
-        title: "Please login to rent this item",
         icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Login now!",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          navigate("/login", { state: { from: location } });
-        }
+        title: `Cannot add ${item.name} to cart with quantity ${manualQuantity}`,
+        timer: 1500,
       });
     }
   };
@@ -149,7 +158,6 @@ const AmenitiesModal = ({
     onConfirm(bookingRentalCart);
     handleAmenitiesToggleModal();
   };
-
 
   const calculateQuantity = (item, pax) => {
     switch (item.name) {
@@ -174,40 +182,57 @@ const AmenitiesModal = ({
         return 0; // Default quantity is 0 for unmatched items
     }
   };
-  
 
-  
-  
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl w-[90%] h-[90%] m-4 overflow-hidden z-50 mt-9">
-        <h3 className="text-2xl leading-6 font-medium text-gray-900 text-center">
+      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl w-[90%] md:w-[80%] lg:w-[70%] xl:w-[60%] h-[90%] max-h-[90vh] m-4 overflow-hidden z-50 flex flex-col">
+        <h3 className="text-2xl leading-6 font-medium text-gray-900 text-center py-4 border-b border-gray-200">
           Rental Items
         </h3>
-        
+
         {/* Filter Section */}
-        <div className="flex items-end mr-40">
-          <select className="select w-full max-w-xs" onChange={handleCategoryChange}>
-            <option value="all">All</option>
-            <option value="tent">Tent</option>
-            <option value="tables">Tables</option>
-            <option value="seating">Seating</option>
-            <option value="linean">Linean & Napkins</option>
-            {/* Add other rental categories here */}
-          </select>
+        <div className="flex flex-wrap items-end justify-between px-4 py-4 border-b border-gray-200 gap-4">
+          <div className="w-full md:w-1/2 lg:w-1/3">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Filter by Category
+            </label>
+            <select
+              className="w-full p-2 border rounded-md text-sm"
+              onChange={handleCategoryChange}
+            >
+              <option value="all">All</option>
+              <option value="tent">Tent</option>
+              <option value="tables">Tables</option>
+              <option value="seating">Seating</option>
+              <option value="linean">Linean & Napkins</option>
+              {/* Add other rental categories here */}
+            </select>
+          </div>
         </div>
 
         {/* Rental Items */}
-        <div className="prose p-6 overflow-y-auto" style={{ maxHeight: "50vh" }}>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="flex-grow overflow-y-auto p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredItems.map((item, index) => (
-              <div key={index} className="relative m-4 flex w-full max-w-xs flex-col overflow-hidden rounded-lg border bg-white shadow-md">
-                <a className="relative mx-3 mt-3 h-60 overflow-hidden rounded-xl flex justify-center" href="#">
-                  <img className="object-cover" src={item.image} alt="product" />
+              <div
+                key={index}
+                className="relative flex flex-col overflow-hidden rounded-lg border bg-white shadow-md"
+              >
+                <a
+                   className="relative mx-3 mt-3 h-40 overflow-hidden rounded-xl flex justify-center"
+                  href="#"
+                >
+                  <img
+                    className="object-cover"
+                    src={item.image}
+                    alt="product"
+                  />
                 </a>
                 <div className="mt-4 px-5 pb-5">
                   <h5 className="text-xl text-slate-900">{item.name}</h5>
-                  <p className="text-3xl font-bold text-slate-900">₱{item.price}</p>
+                  <p className="text-2xl font-bold text-slate-900">
+                    ₱{item.price}
+                  </p>
                   <button
                     onClick={() => handleAddToCart(item)}
                     className="flex items-center justify-center rounded-md bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-700"
@@ -221,7 +246,7 @@ const AmenitiesModal = ({
         </div>
 
         {/* Footer */}
-        <div className="bg-gray-50 px-4 py-3 flex items-center justify-between fixed bottom-0 left-0 w-full lg:w-full mx-auto border-t border-gray-200">
+        <div className="bg-gray-50 px-4 py-3 flex flex-wrap items-center justify-between border-t border-gray-200 gap-4">
           <label
             tabIndex={0}
             onClick={toggleCartPopover}
@@ -257,7 +282,11 @@ const AmenitiesModal = ({
             </dd>
           </dl>
 
-          <RentalCartPopover isVisible={isBookingRentalCartPopoverVisible} />
+          <RentalCartPopover
+            isVisible={isBookingRentalCartPopoverVisible}
+            manualAdjustments={manualAdjustments}
+            setManualAdjustments={setManualAdjustments}
+          />
 
           <button
             onClick={handleAmenitiesToggleModal}

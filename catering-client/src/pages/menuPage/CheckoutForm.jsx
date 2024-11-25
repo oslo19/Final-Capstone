@@ -21,6 +21,7 @@ import VoucherModal from "../../components/VoucherModal";
 import axios from "axios";
 import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import paypal from "../../assets/paypal.png";
+import { v4 as uuidv4 } from "uuid";
 
 const defaultCoordinates = [10.239613, 123.780381];
 const CheckoutForm = () => {
@@ -34,6 +35,7 @@ const CheckoutForm = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedDateTime, setSelectedDateTime] = useState(dayjs());
   const [scheduledText, setScheduledText] = useState("Select a date and time");
+  const [unavailableDates, setUnavailableDates] = useState([]);
   const [isEditing, setIsEditing] = useState(false); // New state to control edit mode
   const [lastName, setLastName] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -50,6 +52,13 @@ const CheckoutForm = () => {
   const [discount, setDiscount] = useState(0);
   const [finalTotal, setFinalTotal] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isPaymentComplete, setIsPaymentComplete] = useState(false); // Tracks payment success
+  const [isAgreementChecked, setIsAgreementChecked] = useState(false);
+  const [selectedDeliveryOption, setSelectedDeliveryOption] = useState(null);
+  const [uploadedFileName, setUploadedFileName] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [transactionId, setTransactionId] = useState("");
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
@@ -67,12 +76,15 @@ const CheckoutForm = () => {
     typeOfMenu,
   } = location.state || {}; // Destructure the state values
 
+  const [paymentAmount, setPaymentAmount] = useState(orderTotal);
   useEffect(() => {
     if (selectedPaymentMethod === "Paypal") {
       const container = document.getElementById("paypal-button-container");
-      if (container) {
+
+      if (container && !container.hasChildNodes()) {
         window.paypal
           .Buttons({
+            // Creates the PayPal order
             createOrder: (data, actions) => {
               return actions.order.create({
                 purchase_units: [
@@ -84,68 +96,62 @@ const CheckoutForm = () => {
                 ],
               });
             },
+            // Called when the PayPal payment is approved
             onApprove: async (data, actions) => {
-              const details = await actions.order.capture();
-              console.log("Payment Successful:", details);
-
-              const orderData = {
-                email: user.email,
-                transactionId: details.id,
-                price: orderTotal,
-                status: "order pending",
-                source: "cart",
-                items: {
-                  menuItems,
-                  rentalItems,
-                  venueItems,
-                },
-                createdAt: new Date(),
-              };
-
               try {
-                const response = await fetch(`${BASE_URL}/orders`, {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify(orderData),
-                });
+                // Capture the payment details
+                const details = await actions.order.capture();
+                console.log("Payment Details:", details);
 
-                if (response.ok) {
-                  await clearCart(); // Clear the cart after saving the order
-                  Swal.fire(
-                    "Success",
-                    "Payment processed successfully. Order placed!",
-                    "success"
-                  );
-                  navigate("/order");
-                } else {
-                  throw new Error("Failed to save order.");
+                // Extract the transaction ID from PayPal response
+                const transactionId = details.id; // PayPal transaction ID
+                console.log("PayPal Transaction ID:", transactionId);
+
+                // Update the state with the PayPal transaction ID
+                setTransactionId(transactionId);
+                setIsPaymentComplete(true);
+
+                if (container) {
+                  container.innerHTML = `
+                    <div class="text-green-600 font-bold">
+                      Payment Successful! Transaction ID: ${transactionId}
+                    </div>
+                  `;
                 }
+
+                Swal.fire(
+                  "Payment Successful",
+                  "Your payment has been processed successfully. Please click 'Place Order' to finalize your order.",
+                  "success"
+                );
               } catch (error) {
-                console.error("Error saving order:", error);
-                Swal.fire("Error", error.message, "error");
+                console.error("Error during PayPal approval:", error);
+
+                Swal.fire(
+                  "Error",
+                  "Something went wrong during the payment process. Please try again.",
+                  "error"
+                );
               }
             },
+            // Handles errors during the PayPal payment process
             onError: (err) => {
               console.error("PayPal Payment Error:", err);
               Swal.fire("Error", "Payment failed. Please try again.", "error");
             },
           })
           .render("#paypal-button-container");
-      } else {
-        console.error("PayPal button container does not exist!");
       }
     }
-  }, [
-    selectedPaymentMethod,
-    orderTotal,
-    user,
-    menuItems,
-    rentalItems,
-    venueItems,
-    navigate,
-  ]);
+
+    // Cleanup to avoid duplicate PayPal buttons
+    return () => {
+      const container = document.getElementById("paypal-button-container");
+      if (container) {
+        container.innerHTML = "";
+      }
+    };
+  }, [selectedPaymentMethod, orderTotal]);
 
   {
     /*ORDER SUMMARY */
@@ -229,9 +235,11 @@ const CheckoutForm = () => {
       );
 
       if (response.status === 200) {
-        refetch();
+        refetch(); // Fetch updated user data
         Swal.fire("Success", "Address updated successfully", "success");
 
+        // Close the modal
+        const modal = document.getElementById("my_modal_address");
         if (modal) {
           modal.close();
         }
@@ -246,7 +254,9 @@ const CheckoutForm = () => {
   const handleShowModal = () => {
     const modal = document.getElementById("my_modal_address");
     if (modal) {
-      modal.showModal(); // Show the modal using getElementById
+      modal.showModal(); // Show the modal using `showModal`
+    } else {
+      console.error("Modal element with ID 'my_modal_address' not found.");
     }
   };
 
@@ -257,15 +267,86 @@ const CheckoutForm = () => {
   {
     /*Delivery Option Logic */
   }
+  useEffect(() => {
+    if (source !== "booking") {
+      const minTime = dayjs().add(30, "minute"); // Set the next available time
+      setSelectedDateTime(minTime);
+      setScheduledText(minTime.format("MMMM D, YYYY h:mm A"));
+    }
+  }, [source]);
+
   const openModal = () => setIsModalVisible(true);
   const closeModal = () => setIsModalVisible(false);
-  const handleConfirm = () => {
-    const formattedDate = selectedDateTime.format("MMMM D, YYYY h:mm A");
-    setScheduledText(formattedDate);
-    setIsEditing(false);
+  const handleConfirm = async () => {
+    const now = dayjs(); // Current time
+    const minTime = now.add(45, "minute"); // Minimum time is 45 minutes from now
+
+    // Ensure the selected time is valid (at least 45 minutes from now)
+    if (!selectedDateTime || selectedDateTime.isBefore(minTime)) {
+      const suggestedTime = minTime;
+      setSelectedDateTime(suggestedTime); // Update to the next available time
+      setScheduledText(suggestedTime.format("MMMM D, YYYY h:mm A"));
+
+      Swal.fire(
+        "Invalid Schedule",
+        `We’ve automatically set the next available time: ${suggestedTime.format(
+          "MMMM D, YYYY h:mm A"
+        )}.`,
+        "info"
+      );
+      return;
+    }
+
+    const selectedDate = selectedDateTime.format("YYYY-MM-DD");
+
+    if (unavailableDates.includes(selectedDate)) {
+      Swal.fire(
+        "Error",
+        "The selected schedule is unavailable. Please choose another date.",
+        "error"
+      );
+      return;
+    }
+
+    setScheduledText(selectedDateTime.format("MMMM D, YYYY h:mm A"));
     closeModal();
-    
   };
+
+  const fetchUnavailableDates = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/orders/schedules/confirmed`);
+      const data = await response.json();
+
+      // Ensure data is an array; fallback to an empty array if it's not
+      setUnavailableDates(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error fetching unavailable dates:", error);
+      setUnavailableDates([]); // Fallback to an empty array on error
+    }
+  };
+
+  useEffect(() => {
+    if (unavailableDates.length > 0) {
+      console.log("Unavailable Dates:", unavailableDates);
+    }
+  }, [unavailableDates]);
+
+  // Fetch unavailable dates when the modal is opened
+  useEffect(() => {
+    if (isModalVisible) {
+      fetchUnavailableDates();
+    }
+  }, [isModalVisible]);
+
+  const handleStandardDelivery = () => {
+    const now = dayjs(); // Current time
+    const scheduledTime = now.add(45, "minute"); // Add 45 minutes to the current time
+
+    setSelectedDeliveryOption("Standard"); // Mark as "Standard" delivery
+    setSelectedDateTime(scheduledTime); // Update the delivery time
+    setScheduledText(scheduledTime.format("MMMM D, YYYY h:mm A")); // Format the schedule text
+  };
+
   {
     /*Delivery END LOGIC */
   }
@@ -326,7 +407,14 @@ const CheckoutForm = () => {
   };
   const handlePaymentChange = (method) => {
     setSelectedPaymentMethod(method);
+
+    // Generate a transaction ID for the selected payment method
+    const newTransactionId = uuidv4();
+    setTransactionId(newTransactionId);
+
+    console.log("Generated Transaction ID:", newTransactionId);
   };
+
   const hasMobileNumber = currentUser && currentUser.mobileNumber;
   const handleEditClick = () => setIsMobileEditing(!isMobileEditing);
   {
@@ -374,119 +462,177 @@ const CheckoutForm = () => {
       icon: "success",
     });
   };
+
+  //HANDLE PAYMENT PLACEORDER BUTTON
   const handlePlaceOrder = async (event) => {
     event.preventDefault();
-    setIsProcessing(true); // Start processing the order
+
+    // Validate required fields
+    if (!isAgreementChecked) {
+      Swal.fire(
+        "Error",
+        "You must agree to the terms and conditions.",
+        "error"
+      );
+      return;
+    }
+
+    if (!selectedDeliveryOption) {
+      Swal.fire("Error", "Please select a delivery option.", "error");
+      return;
+    }
+
+    if (source === "booking" && scheduledText === "Select a date and time") {
+      Swal.fire(
+        "Error",
+        "Please select a date and time for your event.",
+        "error"
+      );
+      return;
+    }
+
+    if (!currentUser?.address) {
+      Swal.fire("Error", "Please provide a delivery address.", "error");
+      return;
+    }
+
+    if (!mobileNumber || !isValidMobileNumber(mobileNumber)) {
+      Swal.fire("Error", "Please provide a valid mobile number.", "error");
+      return;
+    }
+
+    if (!selectedPaymentMethod) {
+      Swal.fire("Error", "Please select a payment method.", "error");
+      return;
+    }
+
+    if (selectedPaymentMethod === "Paypal" && !isPaymentComplete) {
+      Swal.fire(
+        "Error",
+        "Please complete your PayPal payment before placing the order.",
+        "error"
+      );
+      return;
+    }
+
+    setIsProcessing(true);
 
     try {
-      // Call your backend to create a payment intent
-      const paymentIntentResponse = await axios.post(
-        `${BASE_URL}/create-payment-intent`,
-        {
-          price: finalTotal, // Send the final total price
-        }
-      );
+      let generatedTransactionId = transactionId;
 
-      // Assuming the response contains client_secret for Stripe or PayMongo equivalent
-      const { clientSecret } = paymentIntentResponse.data;
-
-      if (!clientSecret) {
-        throw new Error("Failed to create payment intent");
+      // Handle PayPal-specific payment validation
+      if (selectedPaymentMethod === "Paypal") {
+        generatedTransactionId = transactionId;
       }
 
-      // Handle GCash payment
-      if (selectedPaymentMethod === "gcash") {
-        // Redirect to GCash payment link (replace with actual PayMongo link)
-        window.location.href = `https://paymongo.com/${clientSecret}`; // Example URL, replace with the correct one.
+      // Generate a transaction ID for GCash
+      if (selectedPaymentMethod === "GCash") {
+        generatedTransactionId = uuidv4();
       }
 
-      // Stripe Payment Confirmation (adjust this logic to your actual payment method)
-      if (selectedPaymentMethod === "card") {
-        // For Stripe (you might be using stripe.js or Stripe Elements here)
-        const { error } = await stripe.confirmCardPayment(clientSecret, {
-          payment_method: elements.getElement(CardElement), // Assuming you're using Stripe Elements
-        });
+      const paymentType =
+        source === "booking" && paymentAmount < orderTotal ? "partial" : "full";
 
-        if (error) {
-          console.error("Payment failed:", error);
-          Swal.fire("Error", "Payment failed. Please try again.", "error");
-          setIsProcessing(false);
-          return;
-        }
-      }
-
-      // After payment is successful, save order in the backend
       const orderData = {
         email: user.email,
-        transactionId: clientSecret, // Transaction ID from payment gateway
-        price: finalTotal,
+        transactionId: generatedTransactionId,
+        firstName,
+        lastName,
+        price: paymentAmount,
+        remainingBalance: source === "booking" ? orderTotal - paymentAmount : 0,
+        paymentType,
         status: "order pending",
-        source: "cart",
+        source: source || "cart",
         items: {
           menuItems,
           rentalItems,
           venueItems,
         },
-        createdAt: new Date(),
+        typeOfEvent,
+        numberOfPax,
+        typeOfMenu,
+        address,
+        mobileNumber,
+        schedule: scheduledText,
+        modeOfPayment: selectedPaymentMethod,
       };
 
-      const orderResponse = await fetch(`${BASE_URL}/orders`, {
+      console.log("Order Data being sent:", orderData);
+
+      const response = await fetch(`${BASE_URL}/orders`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderData),
       });
 
-      if (orderResponse.ok) {
-        // Clear the cart after successfully saving the order
-        await clearCart();
-
-        Swal.fire(
-          "Success",
-          "Payment processed successfully. Order placed!",
-          "success"
-        );
-        navigate("/order");
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Backend Error Response:", errorData);
+        throw new Error(errorData.message || "Failed to save the order.");
+      }
+      const result = await response.json();
+      await clearCart();
+      Swal.fire(
+        "Success",
+        "Your order has been placed successfully!",
+        "success"
+      );
+      if (source === "booking") {
+        navigate("/order"); // Navigate to booking orders
       } else {
-        throw new Error("Failed to save order.");
+        navigate(`/order-tracking/${result.order.transactionId}`);
       }
     } catch (error) {
       console.error("Error placing order:", error);
       Swal.fire("Error", error.message, "error");
     } finally {
-      setIsProcessing(false); // End the order processing
+      setIsProcessing(false);
     }
   };
 
+  useEffect(() => {
+    if (source !== "booking") {
+      setPaymentAmount(orderTotal); // Force full payment for cart orders
+    }
+  }, [source, orderTotal]);
+
   const clearCart = async () => {
     try {
-      // Clear menu items
-      if (menuItems.length > 0) {
-        for (const item of menuItems) {
-          await axios.delete(`${BASE_URL}/booking-cart/${item._id}`);
+      if (source === "booking") {
+        // Clear booking-specific items
+        if (menuItems.length > 0) {
+          for (const item of menuItems) {
+            await fetch(`${BASE_URL}/booking-cart/${item._id}`, {
+              method: "DELETE",
+            });
+          }
         }
-      }
-
-      // Clear rental items
-      if (rentalItems.length > 0) {
-        for (const item of rentalItems) {
-          await axios.delete(
-            `${BASE_URL}/booking-rental-cart/${item._id}`
-          );
+        if (rentalItems.length > 0) {
+          for (const item of rentalItems) {
+            await fetch(`${BASE_URL}/booking-rental-cart/${item._id}`, {
+              method: "DELETE",
+            });
+          }
         }
-      }
-
-      // Clear venue items
-      if (venueItems.length > 0) {
-        for (const item of venueItems) {
-          await axios.delete(
-            `${BASE_URL}/booking-venue-cart/${item._id}`
-          );
+        if (venueItems.length > 0) {
+          for (const item of venueItems) {
+            await fetch(`${BASE_URL}/booking-venue-cart/${item._id}`, {
+              method: "DELETE",
+            });
+          }
         }
-      }
 
-      Swal.fire("Success", "Cart cleared successfully.", "success");
+        Swal.fire("Success", "Booking cart cleared successfully.", "success");
+      } else {
+        // Clear general cart items
+        if (cart.length > 0) {
+          for (const item of cart) {
+            await fetch(`${BASE_URL}/carts/${item._id}`, { method: "DELETE" });
+          }
+        }
+
+        Swal.fire("Success", "Cart cleared successfully.", "success");
+      }
     } catch (error) {
       console.error("Error clearing cart:", error);
       Swal.fire(
@@ -497,19 +643,67 @@ const CheckoutForm = () => {
     }
   };
 
+  //UPLOAD FILE
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+
+    if (!file) {
+      Swal.fire("Error", "Please select a file to upload.", "error");
+      return;
+    }
+
+    if (file.type !== "application/pdf") {
+      Swal.fire("Error", "Only PDF files are allowed.", "error");
+      return;
+    }
+
+    if (!currentUser || !currentUser._id) {
+      Swal.fire("Error", "You must be logged in to upload a file.", "error");
+      return;
+    }
+
+    setIsUploading(true);
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("userId", currentUser._id);
+
+    try {
+      const response = await fetch(`${BASE_URL}/contracts/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        Swal.fire("Success", "File uploaded successfully!", "success");
+        setUploadedFiles((prev) => [...prev, result.contract]);
+      } else {
+        const error = await response.json();
+        Swal.fire("Error", error.message, "error");
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      Swal.fire("Error", "An unexpected error occurred.", "error");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <>
-      <div className="max-w-screen-2xl container px-4">
-        <div className="flex flex-col md:flex-row-reverse items-start justify-between">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col lg:flex-row-reverse lg:items-start lg:justify-between gap-6">
           {/* Order Summary */}
-          <div className="md:w-1/3 mr-28">
-            <div className="w-full p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8">
-              <h1 className="font-bold text-2xl">Order Summary</h1>
+          <div className="w-full lg:w-1/3">
+            <div className="w-full p-4 bg-white border border-gray-200 rounded-lg shadow-sm sm:p-6">
+              <h1 className="font-bold text-2xl mb-4">Order Summary</h1>
 
               {/* Display Type of Event, Number of Pax, and Type of Menu only for bookings */}
               {source === "booking" && (
-                <div className="mt-4">
-                  <div className="flex justify-between mb-2 font-medium text-sm text-gray-500">
+                <div className="mb-4 space-y-2">
+                  <div className="flex justify-between text-sm text-gray-500">
                     <p>Type of Event:</p>
                     <p className="font-bold text-black">
                       {typeOfEvent
@@ -518,13 +712,13 @@ const CheckoutForm = () => {
                         : "N/A"}
                     </p>
                   </div>
-                  <div className="flex justify-between mb-2 font-medium text-sm text-gray-500">
+                  <div className="flex justify-between text-sm text-gray-500">
                     <p>Number of Pax:</p>
                     <p className="font-bold text-black">
                       {numberOfPax || "N/A"}
                     </p>
                   </div>
-                  <div className="flex justify-between mb-2 font-medium text-sm text-gray-500">
+                  <div className="flex justify-between text-sm text-gray-500">
                     <p>Type of Menu:</p>
                     <p className="font-bold text-black">
                       {typeOfMenu || "N/A"}
@@ -534,89 +728,94 @@ const CheckoutForm = () => {
               )}
 
               {/* Check if the source is "booking" */}
-              {source === "booking" ? (
-                <>
-                  {/* Booking Menu Items */}
-                  {menuItems.length > 0 && (
-                    <>
-                      <h2 className="text-lg font-semibold mt-4">Menu Items</h2>
-                      {menuItems.map((item, index) => (
-                        <div
-                          key={`menu-${index}`}
-                          className="flex justify-between mb-2 mt-2 font-medium text-sm text-gray-500"
-                        >
-                          <p>
-                            {item.quantity} x {item.name}
-                          </p>
-                          <p className="font-normal text-black">
-                            ₱ {item.price * item.quantity}
-                          </p>
-                        </div>
-                      ))}
-                    </>
-                  )}
+              <div className="space-y-4">
+                {source === "booking" ? (
+                  <>
+                    {/* Booking Menu Items */}
+                    {menuItems.length > 0 && (
+                      <>
+                        <h2 className="text-lg font-semibold mt-4">
+                          Menu Items
+                        </h2>
+                        {menuItems.map((item, index) => (
+                          <div
+                            key={`menu-${index}`}
+                            className="flex justify-between mb-2 mt-2 font-medium text-sm text-gray-500"
+                          >
+                            <p>
+                              {item.quantity} x {item.name}
+                            </p>
+                            <p className="font-normal text-black">
+                              ₱ {item.price * item.quantity}
+                            </p>
+                          </div>
+                        ))}
+                      </>
+                    )}
 
-                  {/* Booking Amenities */}
-                  {rentalItems.length > 0 && (
-                    <>
-                      <h2 className="text-lg font-semibold mt-4">Amenities</h2>
-                      {rentalItems.map((item, index) => (
-                        <div
-                          key={`amenity-${index}`}
-                          className="flex justify-between mb-2 mt-2 font-medium text-sm text-gray-500"
-                        >
-                          <p>
-                            {item.quantity} x {item.name}
-                          </p>
-                          <p className="font-normal text-black">
-                            ₱ {item.price * item.quantity}
-                          </p>
-                        </div>
-                      ))}
-                    </>
-                  )}
+                    {/* Booking Amenities */}
+                    {rentalItems.length > 0 && (
+                      <>
+                        <h2 className="text-lg font-semibold mt-4">
+                          Amenities
+                        </h2>
+                        {rentalItems.map((item, index) => (
+                          <div
+                            key={`amenity-${index}`}
+                            className="flex justify-between mb-2 mt-2 font-medium text-sm text-gray-500"
+                          >
+                            <p>
+                              {item.quantity} x {item.name}
+                            </p>
+                            <p className="font-normal text-black">
+                              ₱ {item.price * item.quantity}
+                            </p>
+                          </div>
+                        ))}
+                      </>
+                    )}
 
-                  {/* Booking Venue */}
-                  {venueItems.length > 0 && (
-                    <>
-                      <h2 className="text-lg font-semibold mt-4">Venue</h2>
-                      {venueItems.map((item, index) => (
-                        <div
-                          key={`venue-${index}`}
-                          className="flex justify-between mb-2 mt-2 font-medium text-sm text-gray-500"
-                        >
-                          <p>{item.venueName}</p>
-                          <p className="font-normal text-black">
-                            ₱ {item.rentalPrice}
-                          </p>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                </>
-              ) : (
-                <>
-                  {/* Render "Order" items if source is not "booking" */}
-                  {cart.map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex justify-between mb-2 mt-5 font-medium text-sm text-gray-500"
-                    >
-                      <p>
-                        {item.quantity} x {item.name}
-                      </p>
-                      <p className="font-normal text-black">
-                        ₱ {item.price * item.quantity}
-                      </p>
-                    </div>
-                  ))}
-                </>
-              )}
-
+                    {/* Booking Venue */}
+                    {venueItems.length > 0 && (
+                      <>
+                        <h2 className="text-lg font-semibold mt-4">Venue</h2>
+                        {venueItems.map((item, index) => (
+                          <div
+                            key={`venue-${index}`}
+                            className="flex justify-between mb-2 mt-2 font-medium text-sm text-gray-500"
+                          >
+                            <p>{item.venueName}</p>
+                            <p className="font-normal text-black">
+                              ₱ {item.rentalPrice}
+                            </p>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {/* Render "Order" items if source is not "booking" */}
+                    {cart.map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex justify-between mb-2 mt-5 font-medium text-sm text-gray-500"
+                      >
+                        <p>
+                          {item.quantity} x {item.name}
+                        </p>
+                        <p className="font-normal text-black">
+                          ₱ {item.price * item.quantity}
+                        </p>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
               <div className="divider my-4"></div>
 
               {/* Subtotal */}
-              <div className="flex justify-between font-medium text-gray-500 text-md">
+              <div className="flex justify-between text-md text-gray-500">
                 <p>Subtotal</p>
                 <p className="font-bold text-black">
                   ₱{" "}
@@ -628,7 +827,7 @@ const CheckoutForm = () => {
 
               {/* Discount */}
               {discount > 0 && (
-                <div className="flex justify-between font-medium text-gray-500 text-md mt-3">
+                <div className="flex justify-between text-md text-gray-500 mt-3">
                   <p>Discount</p>
                   <p className="font-bold text-green-600">
                     -₱ {discount.toFixed(2)}
@@ -637,7 +836,7 @@ const CheckoutForm = () => {
               )}
 
               {/* Delivery Fee */}
-              <div className="flex justify-between font-medium text-gray-500 text-md mt-3">
+              <div className="flex justify-between text-md text-gray-500 mt-3">
                 <p>Scheduled delivery</p>
                 <p className="font-bold text-black">
                   ₱ {deliveryFee.toFixed(2)}
@@ -645,7 +844,7 @@ const CheckoutForm = () => {
               </div>
 
               {/* Total */}
-              <div className="flex justify-between font-bold text-xl mt-6">
+              <div className="flex justify-between text-xl font-bold mt-6">
                 <p>Total</p>
                 <p>₱ {finalTotal.toFixed(2)}</p>
               </div>
@@ -653,8 +852,9 @@ const CheckoutForm = () => {
           </div>
 
           {/* Delivery Address */}
-          <div className="text-white w-full md:w-1/2 ml-12">
-            <div className="p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8">
+          <div className="w-full lg:w-2/3">
+            {/* Delivery Address */}
+            <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm sm:p-6">
               <form className="space-y-6" onSubmit={handleSubmitAddress}>
                 <div className="flex items-start">
                   <label className="ms-2 text-2xl font-bold text-gray-900">
@@ -689,7 +889,7 @@ const CheckoutForm = () => {
                       ></textarea>
                       <label
                         htmlFor="deliveryNote"
-                        className="absolute start-2 text-xs cursor-text left-1 -top-2.5 text-gray-400 bg-gray-50 px-1 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-placeholder-shown:top-2 peer-focus:-top-2.5 peer-focus:text-black peer-focus:text-xs transition-all "
+                        className="absolute start-2 text-xs cursor-text left-1 -top-2.5 text-gray-400 bg-gray-50 px-1 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-placeholder-shown:top-2 peer-focus:-top-2.5 peer-focus:text-black peer-focus:text-xs transition-all"
                       >
                         Note to delivery - e.g. building, landmark
                       </label>
@@ -701,9 +901,10 @@ const CheckoutForm = () => {
                       No address available
                     </p>
                     <button
+                      type="button"
                       onClick={(e) => {
                         e.preventDefault();
-                        modal.showModal();
+                        handleShowModal();
                       }}
                       className="btn"
                     >
@@ -760,7 +961,7 @@ const CheckoutForm = () => {
               </dialog>
             </div>
 
-            {/*Delivery Option */}
+            {/* Delivery Option */}
             <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8">
               {/* Heading changes based on source */}
               <h1 className="font-bold text-2xl text-black">
@@ -777,14 +978,15 @@ const CheckoutForm = () => {
                     <input
                       id="bordered-radio-1"
                       type="radio"
-                      value=""
+                      value="Standard"
                       name="bordered-radio"
                       className="w-4 h-4 text-black bg-gray-100 border-gray-300 focus:ring-black"
+                      onChange={handleStandardDelivery} // Call the Standard delivery handler
                     />
                     <span className="w-full py-4 ms-2 text-lg font-bold text-gray-900">
                       Standard
                       <span className="text-gray-600 text-md mx-3 font-normal">
-                        5 - 20 mins
+                        15 - 40 mins
                       </span>
                     </span>
                   </label>
@@ -800,9 +1002,11 @@ const CheckoutForm = () => {
                   <input
                     id="bordered-radio-2"
                     type="radio"
+                    value="Scheduled"
                     name="bordered-radio"
                     className="w-4 h-4 text-black bg-gray-100 border-gray-300 focus:ring-black"
-                    onClick={openModal}
+                    onChange={(e) => setSelectedDeliveryOption(e.target.value)} // Update selected option
+                    onClick={openModal} // Open modal for schedule selection
                   />
                   <span className="w-full py-4 ms-2 text-lg font-bold text-gray-900">
                     Scheduled
@@ -831,7 +1035,7 @@ const CheckoutForm = () => {
                   id="timepicker-modal"
                   tabIndex="-1"
                   aria-hidden="true"
-                  className="fixed inset-0 z-50 flex justify-center items-center w-full h-full bg-gray-800 bg-opacity-50"
+                  className="fixed inset-0 z-[1050] flex justify-center items-center w-full h-full bg-gray-800 bg-opacity-50"
                 >
                   <div className="relative p-4 w-full max-w-[50rem] max-h-full">
                     <div className="relative bg-white rounded-lg shadow dark:bg-gray-800">
@@ -874,18 +1078,63 @@ const CheckoutForm = () => {
                             <StaticDateTimePicker
                               orientation="landscape"
                               value={selectedDateTime}
-                              onChange={(newValue) =>
-                                setSelectedDateTime(newValue)
+                              onChange={(newValue) => {
+                                const now = dayjs();
+                                const minTime = now.add(45, "minute"); // 45 minutes includes preparation and delivery time
+
+                                if (
+                                  source !== "booking" &&
+                                  newValue.isBefore(minTime)
+                                ) {
+                                  // Suggest the next available time
+                                  const suggestedTime = minTime;
+                                  setSelectedDateTime(suggestedTime);
+                                  setScheduledText(
+                                    suggestedTime.format("MMMM D, YYYY h:mm A")
+                                  );
+
+                                  Swal.fire({
+                                    icon: "info",
+                                    title: "Unavailable Time",
+                                    text: `The selected time is unavailable. We’ve automatically set the next available time: ${suggestedTime.format(
+                                      "MMMM D, YYYY h:mm A"
+                                    )}.`,
+                                  }).then(() => {
+                                    // Close the modal after user acknowledges the suggestion
+                                    closeModal();
+                                  });
+                                } else {
+                                  setSelectedDateTime(newValue);
+                                  setScheduledText(
+                                    newValue.format("MMMM D, YYYY h:mm A")
+                                  );
+                                }
+                              }}
+                              shouldDisableDate={(date) =>
+                                Array.isArray(unavailableDates) &&
+                                unavailableDates.includes(
+                                  date.format("YYYY-MM-DD")
+                                )
                               }
                               minDate={dayjs()} // Prevent selecting past dates
+                              disablePast // Ensure past times are disabled
                             />
                           </LocalizationProvider>
                         </div>
 
                         {/* Confirm Button */}
                         <button
-                          className="w-full px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-800"
+                          className={`w-full px-4 py-2 text-white rounded-lg ${
+                            unavailableDates.includes(
+                              selectedDateTime.format("YYYY-MM-DD")
+                            )
+                              ? "bg-gray-400 cursor-not-allowed"
+                              : "bg-blue-600 hover:bg-blue-800"
+                          }`}
                           onClick={handleConfirm}
+                          disabled={unavailableDates.includes(
+                            selectedDateTime.format("YYYY-MM-DD")
+                          )}
                         >
                           Confirm
                         </button>
@@ -897,143 +1146,136 @@ const CheckoutForm = () => {
             </div>
 
             {/* Personal Details */}
-            {hasMobileNumber && isMobileEditing ? (
-              <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8">
-                <h1 className="font-bold text-2xl text-black flex items-center">
-                  Personal Details
-                  {hasMobileNumber && (
-                    <span
-                      onClick={handleEditClick}
-                      className="btn btn-ghost ml-auto w-[50px] cursor-pointer"
-                    >
-                      {isMobileEditing ? "Cancel" : "Edit"}
-                    </span>
-                  )}
-                </h1>
-
-                {/* Email Field */}
-                <div className="relative mt-6">
-                  <input
-                    value={user.email || ""}
-                    type="email"
-                    id="email"
-                    className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border-1 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-black peer"
-                    placeholder=" "
-                    disabled
-                  />
-                  <label
-                    htmlFor="email"
-                    className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 start-2 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
+            <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8">
+              <h1 className="font-bold text-2xl text-black flex items-center">
+                Personal Details
+                {hasMobileNumber && (
+                  <span
+                    onClick={handleEditClick}
+                    className="btn btn-ghost ml-auto w-[50px] cursor-pointer"
                   >
-                    Email
-                  </label>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  {/* First Name */}
-                  <div className="relative">
-                    <input
-                      type="text"
-                      id="firstName"
-                      className="block px-2.5 pt-4 w-full text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      placeholder=" "
-                    />
-                    <label
-                      htmlFor="firstName"
-                      className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 start-2 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
-                    >
-                      First Name
-                    </label>
-                  </div>
-
-                  {/* Last Name */}
-                  <div className="relative">
-                    <input
-                      type="text"
-                      id="lastName"
-                      className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      placeholder=" "
-                    />
-                    <label
-                      htmlFor="lastName"
-                      className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 start-2 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
-                    >
-                      Last Name
-                    </label>
-                  </div>
-                </div>
-
-                {/* Mobile Number */}
-                <div className="relative mt-4">
-                  <input
-                    type="text"
-                    id="mobileNumber"
-                    className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
-                    value={mobileNumber}
-                    onChange={handleMobileNumberChange}
-                    placeholder=" "
-                  />
-                  <label
-                    htmlFor="mobileNumber"
-                    className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 start-2 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
-                  >
-                    Mobile Number
-                  </label>
-                </div>
-
-                {/* Save Button */}
-                <div className="flex justify-start mt-6">
-                  <button
-                    onClick={handleSubmitMobileNumber}
-                    type="submit"
-                    className={`w-full py-3 text-white rounded-lg ${
-                      isSaveEnabled
-                        ? "bg-prime hover:bg-orange-700"
-                        : "bg-gray-400 cursor-not-allowed"
-                    }`}
-                    disabled={!isSaveEnabled}
-                  >
-                    Save
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8">
-                <h1 className="font-bold text-2xl text-black flex items-center">
-                  Personal Details
-                  {hasMobileNumber && (
-                    <span
-                      onClick={handleEditClick}
-                      className="btn btn-ghost ml-auto w-2 cursor-pointer"
-                    >
-                      {isMobileEditing ? "Cancel" : "Edit"}
-                    </span>
-                  )}
-                </h1>
-                {currentUser ? (
-                  <>
-                    <p className="text-black font-semibold mt-6 text-sm">
-                      {currentUser.firstName || "N/A"}{" "}
-                      {currentUser.lastName || "N/A"}
-                    </p>
-                    <p className="text-black font-normal mt-1 text-sm">
-                      {currentUser.email || "N/A"}
-                    </p>
-                    <p className="text-black font-normal mt-1 text-sm">
-                      {currentUser.mobileNumber || "N/A"}
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-black font-semibold mt-6 text-sm">
-                    Loading...
-                  </p>
+                    {isMobileEditing ? "Cancel" : "Edit"}
+                  </span>
                 )}
-              </div>
-            )}
+              </h1>
+
+              {hasMobileNumber && !isMobileEditing ? (
+                // Display personal details when the user has a mobile number
+                <>
+                  {currentUser ? (
+                    <>
+                      <p className="text-black font-semibold mt-6 text-sm">
+                        {currentUser.firstName || "N/A"}{" "}
+                        {currentUser.lastName || "N/A"}
+                      </p>
+                      <p className="text-black font-normal mt-1 text-sm">
+                        {currentUser.email || "N/A"}
+                      </p>
+                      <p className="text-black font-normal mt-1 text-sm">
+                        {currentUser.mobileNumber || "N/A"}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-black font-semibold mt-6 text-sm">
+                      Loading...
+                    </p>
+                  )}
+                </>
+              ) : (
+                // Show editable fields when the user doesn't have a mobile number or is editing
+                <>
+                  {/* Email Field */}
+                  <div className="relative mt-6">
+                    <input
+                      value={user.email || ""}
+                      type="email"
+                      id="email"
+                      className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border-1 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-black peer"
+                      placeholder=" "
+                      disabled
+                    />
+                    <label
+                      htmlFor="email"
+                      className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 start-2 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
+                    >
+                      Email
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    {/* First Name */}
+                    <div className="relative">
+                      <input
+                        type="text"
+                        id="firstName"
+                        className="block px-2.5 pt-4 w-full text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder=" "
+                      />
+                      <label
+                        htmlFor="firstName"
+                        className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 start-2 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
+                      >
+                        First Name
+                      </label>
+                    </div>
+
+                    {/* Last Name */}
+                    <div className="relative">
+                      <input
+                        type="text"
+                        id="lastName"
+                        className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder=" "
+                      />
+                      <label
+                        htmlFor="lastName"
+                        className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 start-2 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
+                      >
+                        Last Name
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Mobile Number */}
+                  <div className="relative mt-4">
+                    <input
+                      type="text"
+                      id="mobileNumber"
+                      className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
+                      value={mobileNumber || ""}
+                      onChange={handleMobileNumberChange}
+                      placeholder=" "
+                    />
+                    <label
+                      htmlFor="mobileNumber"
+                      className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 start-2 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
+                    >
+                      Mobile Number
+                    </label>
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="flex justify-start mt-6">
+                    <button
+                      onClick={handleSubmitMobileNumber}
+                      type="submit"
+                      className={`w-full py-3 text-white rounded-lg ${
+                        isSaveEnabled
+                          ? "bg-prime hover:bg-orange-700"
+                          : "bg-gray-400 cursor-not-allowed"
+                      }`}
+                      disabled={!isSaveEnabled}
+                    >
+                      Save
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* PASS TO MOBILENUMBEROMDAL */}
             {isMobileNumberModalVisible && (
@@ -1044,9 +1286,52 @@ const CheckoutForm = () => {
               />
             )}
 
+            <div className="mt-4 bg-white border border-gray-200 rounded-lg shadow p-4 sm:p-6 md:p-8">
+              <h1 className="font-bold text-[24px] text-black">Payment</h1>
+              {source === "booking" ? (
+                <div className="mt-4 ">
+                  <h2 className="text-lg font-bold">Select Payment Option</h2>
+                  <div className="flex items-center mt-4">
+                    {/* Full Payment Option */}
+                    <label className="flex items-center cursor-pointer mr-4">
+                      <input
+                        type="radio"
+                        name="paymentAmount"
+                        value="full"
+                        checked={paymentAmount === orderTotal}
+                        onChange={() => setPaymentAmount(orderTotal)}
+                        className="mr-2"
+                      />
+                      <span className="text-black">
+                        Full Payment (₱{orderTotal.toFixed(2)})
+                      </span>
+                    </label>
+                    {/* Half Payment Option */}
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        name="paymentAmount"
+                        value="half"
+                        checked={paymentAmount === orderTotal / 2}
+                        onChange={() => setPaymentAmount(orderTotal / 2)}
+                        className="mr-2"
+                      />
+                      <span className="text-black">
+                        Down Payment (₱{(orderTotal / 2).toFixed(2)})
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-black font-medium">
+                  Full payment required: ₱{orderTotal.toFixed(2)}
+                </p>
+              )}
+            </div>
+
             {/*PAYMENT DETAILS */}
             {hasMobileNumber && (
-              <div className="mt-4  bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-6">
+              <div className="mt-4 bg-white border border-gray-200 rounded-lg shadow p-4 sm:p-6 md:p-8">
                 <h1 className="font-bold text-[24px] text-black">Payment</h1>
                 {/* GCash Option */}
                 <div
@@ -1137,13 +1422,77 @@ const CheckoutForm = () => {
               </div>
             )}
 
+            {/* CONTRACT */}
+            <div className="mt-4 bg-white border border-gray-200 rounded-lg shadow p-4 sm:p-6 md:p-8">
+              <h2 className="text-lg font-bold text-black">
+                Contract Agreement
+              </h2>
+              <p className="text-sm text-gray-600 mt-2">
+                If you would like to sign a contract for your order, you can
+                download the contract form below, review it, and upload a signed
+                copy here.
+              </p>
+              <div className="mt-4">
+                <a
+                  href="/assets/contract-form.pdf"
+                  download="LaEstellita_Contract_Form.pdf"
+                  className="inline-flex items-center px-4 py-2 text-white bg-prime hover:bg-orange-700 font-medium rounded-lg"
+                >
+                  Download Contract Form
+                </a>
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Upload Signed Contract
+                </label>
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handleFileUpload}
+                  className="mt-2 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
+                />
+              </div>
+
+              {isUploading && (
+                <p className="mt-2 text-sm text-gray-500">Uploading...</p>
+              )}
+
+              <div className="mt-6">
+                <h3 className="text-md font-bold text-black">
+                  Uploaded Contracts
+                </h3>
+                {uploadedFiles.length > 0 ? (
+                  <ul className="mt-4 space-y-2">
+                    {uploadedFiles.map((file) => (
+                      <li key={file._id} className="text-sm text-gray-600">
+                        <a
+                          href={`/${file.filePath}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 underline"
+                        >
+                          {file.filePath.split("/").pop()}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-2 text-sm text-gray-500">
+                    No contracts uploaded yet.
+                  </p>
+                )}
+              </div>
+            </div>
+
             {/*AGREEMENT  */}
             <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8">
               <div className="flex items-start text-black">
                 <input
                   type="checkbox"
-                  defaultChecked
                   className="checkbox mt-1 mr-4"
+                  checked={isAgreementChecked}
+                  onChange={(e) => setIsAgreementChecked(e.target.checked)}
                 />
                 <label className="text-left cursor-pointer font-medium text-gray-800">
                   I hereby give La Estellita the permission to share my customer
@@ -1161,14 +1510,31 @@ const CheckoutForm = () => {
               </div>
             </div>
 
-            {/*PLAC ORDER BUTTON */}
+            {/* PLACE ORDER BUTTON */}
             <div className="mt-9">
               <button
                 onClick={handlePlaceOrder}
                 type="submit"
-                className="w-full justify-center py-3 border border-transparent shadow-sm text-md font-medium rounded-lg text-white bg-prime hover:bg-orange-700"
+                className={`w-full justify-center py-3 border border-transparent shadow-sm text-md font-medium rounded-lg text-white ${
+                  isAgreementChecked &&
+                  selectedDeliveryOption &&
+                  (isPaymentComplete || selectedPaymentMethod !== "Paypal") &&
+                  currentUser?.address &&
+                  (source !== "booking" ||
+                    scheduledText !== "Select a date and time") 
+                    ? "bg-prime hover:bg-orange-700"
+                    : "bg-gray-400 cursor-not-allowed"
+                }`}
+                disabled={
+                  !isAgreementChecked ||
+                  !selectedDeliveryOption ||
+                  (selectedPaymentMethod === "Paypal" && !isPaymentComplete) ||
+                  !currentUser?.address ||
+                  (source === "booking" &&
+                    scheduledText === "Select a date and time") 
+                }
               >
-                Place order
+                Place Order
               </button>
             </div>
             {/*CONDITION */}

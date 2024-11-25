@@ -3,7 +3,7 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import useBookingRentalCart from "../hooks/useBookingRentalCart";
 
-const RentalCartPopover = ({ isVisible }) => {
+const RentalCartPopover = ({ isVisible , manualAdjustments, setManualAdjustments}) => {
   const [bookingRentalCart, refetch] = useBookingRentalCart();
   const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   useEffect(() => {
@@ -14,8 +14,8 @@ const RentalCartPopover = ({ isVisible }) => {
 
   const calculateTotalPrice = (item) => item.price * item.quantity;
 
-  const handleUpdateQuantity = async (item, quantity) => {
-    if (quantity <= 0) {
+  const handleUpdateQuantity = async (item, newQuantity) => {
+    if (newQuantity <= 0) {
       handleDelete(item);
       return;
     }
@@ -23,13 +23,15 @@ const RentalCartPopover = ({ isVisible }) => {
     try {
       const response = await axios.put(
         `${BASE_URL}/booking-rental-cart/${item._id}`,
-        {
-          quantity,
-        }
+        { quantity: newQuantity }
       );
 
       if (response.status === 200) {
-        await refetch();
+        setManualAdjustments((prev) => ({
+          ...prev,
+          [item.rentalItemId]: true, // Mark item as manually adjusted
+        }));
+        refetch();
       } else {
         console.error("Failed to update quantity");
       }
@@ -129,6 +131,7 @@ const RentalCartPopover = ({ isVisible }) => {
                     }
                     className="w-12 text-center text-gray-900 border border-gray-300 rounded-md focus:outline-none"
                   />
+
                   <p className="ml-2 text-sm">₱{item.price} each</p>
                 </div>
               </div>

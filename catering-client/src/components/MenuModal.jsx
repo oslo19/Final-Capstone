@@ -92,7 +92,7 @@ const MenuModal = ({
       };
   
       axios
-        .post("${BASE_URL}/booking-cart", bookingItem)
+        .post(`${BASE_URL}/booking-cart`, bookingItem)
         .then((response) => {
           if (response) {
             refetch();
@@ -149,14 +149,14 @@ const MenuModal = ({
     setView(newView);
   };
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl w-[90%] h-[90%] m-4 overflow-hidden z-50 mt-9">
-        <h3 className="text-2xl leading-6 font-medium text-gray-900 text-center">
+    <div className="fixed inset-0 z-[1050] flex items-center justify-center bg-black bg-opacity-75">
+      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl w-[90%] md:w-[80%] lg:w-[70%] xl:w-[60%] h-[90%] max-h-[90vh] m-4 overflow-hidden z-[1050] mt-9 flex flex-col">
+      <h3 className="text-2xl leading-6 font-medium text-gray-900 text-center py-4 border-b border-gray-200">
           Menu Order
         </h3>
-        <div className="flex justify-between px-6 py-4 border-b border-gray-200">
+        <div className="flex flex-wrap justify-between px-4 py-4 border-b border-gray-200 gap-4">
           {/* Budget Range Slider */}
-          <div className="p-4 w-96">
+          <div className="w-full md:w-1/3">
             <label htmlFor="price-range" className="block text-sm font-medium text-gray-700">Budget Range</label>
             <input
               type="range"
@@ -171,7 +171,7 @@ const MenuModal = ({
               <span>₱{priceRange}</span>
               <span>₱{maxBudget}</span>
             </div>
-            <label htmlFor="max-budget" className="block text-sm font-medium text-gray-700 mt-1">Enter your Budget</label>
+            <label htmlFor="max-budget" className="block text-sm font-medium text-gray-700 mt-2">Enter your Budget</label>
             <input
               type="number"
               id="max-budget"
@@ -183,7 +183,7 @@ const MenuModal = ({
           </div>
 
           {/* Filter Section */}
-          <div className="flex items-end mr-40">
+          <div className="w-full md:w-1/3">
             <select className="select w-full max-w-xs" onChange={handleCategoryChange}>
               <option value="all">All</option>
               <option value="appetizers">Appetizer</option>
@@ -203,26 +203,6 @@ const MenuModal = ({
             <p className="text-gray-700 text-base mb-4">
               {selectedMenuType || "No menu type selected"}
             </p>
-            {selectedMenuType === "Buffet Type" && (
-              <div><h5 className="font-bold">BUFFET TYPE SERVICES:</h5>
-              <p>
-              Our Buffet Type service offers a delicious variety of dishes,
-              perfect for gatherings where guests can enjoy a relaxed,
-              self-serve dining experience. Ideal for weddings, family
-              events, and social occasions.
-              </p></div>
-            )}
-            {selectedMenuType === "Packed Meals" && (
-              <div><h5 className="font-bold">PACKED MEAL</h5><p>Packed in a styrofoam, spoon, fork, and toothpick included.</p></div>
-            )}
-            {selectedMenuType === "Cocktail Type" && (
-              <div><h5 className="font-bold">COCKTAIL TYPE SERVICE</h5>
-              <p>
-                Business meetings, company launching, event opening, VIP
-                gatherings, and other functions may avail of our
-                well-personalized customer cocktail party service.
-              </p></div>
-            )}
           </div>
         </div>
 
@@ -250,7 +230,7 @@ const MenuModal = ({
         </div>
 
         {/* Footer */}
-        <div className="bg-gray-50 px-4 py-3 flex items-center justify-between fixed bottom-0 left-0 w-full lg:w-full mx-auto border-t border-gray-200">
+        <div className="bg-gray-50 px-4 py-3 flex items-center justify-between fixed bottom-0 left-0 w-full lg:w-full mx-auto border-t border-gray-200 z-[1050]">
           <label
             tabIndex={0}
             onClick={toggleCartPopover}
