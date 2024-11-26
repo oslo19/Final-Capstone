@@ -180,6 +180,54 @@ const getOrderByTransactionId = async (req, res) => {
   }
 };
 
+const getAggregatedSalesReport = async (req, res) => {
+  const { startDate, endDate } = req.query;
+
+  try {
+    const matchStage = {};
+    if (startDate && endDate) {
+      matchStage.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      };
+    }
+
+    const salesReport = await Order.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: null,
+          totalOrders: { $sum: 1 },
+          totalSales: { $sum: "$price" },
+          totalTax: { $sum: { $multiply: ["$price", 0.12] } }, // Assuming 12% tax
+          totalProductsSold: {
+            $sum: {
+              $add: [
+                { $size: "$items.menuItems" },
+                { $size: "$items.rentalItems" },
+                { $size: "$items.venueItems" },
+              ],
+            },
+          },
+        },
+      },
+    ]);
+
+    if (salesReport.length === 0) {
+      return res.status(200).json({
+        totalOrders: 0,
+        totalSales: 0,
+        totalTax: 0,
+        totalProductsSold: 0,
+      });
+    }
+
+    res.status(200).json(salesReport[0]);
+  } catch (error) {
+    console.error("Error generating sales report:", error);
+    res.status(500).json({ message: "Failed to generate sales report.", error });
+  }
+};
 
 
 module.exports = {
@@ -189,5 +237,6 @@ module.exports = {
   updateOrderStatus,
   getConfirmedSchedulesForDay,
   updateOrder,
-  getOrderByTransactionId
+  getOrderByTransactionId,
+  getAggregatedSalesReport
 };

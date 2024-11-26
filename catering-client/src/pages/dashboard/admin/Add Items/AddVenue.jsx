@@ -1,8 +1,8 @@
 import React from "react";
 import { FaBuilding } from "react-icons/fa";
 import { useForm } from "react-hook-form";
-import useAxiosPublic from "../../../hooks/useAxiosPublic";
-import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import useAxiosPublic from "../../../../hooks/useAxiosPublic";
+import useAxiosSecure from "../../../../hooks/useAxiosSecure";
 import Swal from "sweetalert2";
 
 const AddVenue = () => {

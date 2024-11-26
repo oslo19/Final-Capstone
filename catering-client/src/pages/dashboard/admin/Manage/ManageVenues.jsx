@@ -1,18 +1,16 @@
 import React from "react";
-import useMenu from "../../../hooks/useMenu";
 import { Link } from "react-router-dom";
 import { FaEdit, FaTrashAlt } from "react-icons/fa";
 import Swal from "sweetalert2";
-import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import useVenue from "../../../../hooks/useVenue";
+import useAxiosSecure from "../../../../hooks/useAxiosSecure";
 
-const ManageItems = () => {
-  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
-  const [menu, , refetch] = useMenu();
+const ManageVenues = () => {
+  const [venues, , refetch] = useVenue();
   const axiosSecure = useAxiosSecure();
-//   console.log(menu);
-
-  //   handleDeleteItem
-  const handleDeleteItem = (item) => {
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+  // Handle Delete Venue
+  const handleDeleteVenue = (venue) => {
     Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -23,25 +21,25 @@ const ManageItems = () => {
       confirmButtonText: "Yes, delete it!",
     }).then(async (result) => {
       if (result.isConfirmed) {
-        const res = await axiosSecure.delete(`/menu/${item._id}`);
-         //console.log(res);
-       if(res) {
-        refetch();
-        Swal.fire({
-          title: "Deleted!",
-          text: "Your file has been deleted.",
-          icon: "success",
-        });
-       }
+        const res = await axiosSecure.delete(`/venues/${venue._id}`);
+        if (res) {
+          refetch();
+          Swal.fire({
+            title: "Deleted!",
+            text: "Your venue has been deleted.",
+            icon: "success",
+          });
+        }
       }
     });
   };
+
   return (
     <div className="w-full md:w-[870px] px-4 mx-auto text-black">
       <h2 className="text-2xl font-semibold my-4">
-        Manage All <span className="text-prime">Menu Items</span>
+        Manage All <span className="text-prime">Venues</span>
       </h2>
-      {/* menu item table */}
+      {/* Venue item table */}
       <div>
         <div className="overflow-x-auto">
           <table className="table">
@@ -50,29 +48,31 @@ const ManageItems = () => {
               <tr>
                 <th>#</th>
                 <th>Image</th>
-                <th>Item Name</th>
-                <th>Price</th>
+                <th>Venue Name</th>
+                <th>Capacity</th>
+                <th>Rental Price</th>
                 <th>Edit</th>
                 <th>Delete</th>
               </tr>
             </thead>
             <tbody>
-              {menu.map((item, index) => (
+              {venues.map((venue, index) => (
                 <tr key={index}>
                   <th>{index + 1}</th>
                   <td>
                     <div className="flex items-center gap-3">
                       <div className="avatar">
                         <div className="mask mask-squircle w-12 h-12">
-                          <img src={item.image} alt="" />
+                          <img src={venue.image} alt="" />
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td>{item.name}</td>
-                  <td>₱{item.price}</td>
+                  <td>{venue.venueName}</td>
+                  <td>{venue.capacity}</td>
+                  <td>₱{venue.rentalPrice}</td>
                   <td>
-                    <Link to={`/dashboard/update-menu/${item._id}`}>
+                    <Link to={`/dashboard/update-venue/${venue._id}`}>
                       <button className="btn btn-ghost btn-xs bg-prime-500 text-black">
                         <FaEdit />
                       </button>
@@ -80,7 +80,7 @@ const ManageItems = () => {
                   </td>
                   <td>
                     <button
-                      onClick={() => handleDeleteItem(item)}
+                      onClick={() => handleDeleteVenue(venue)}
                       className="btn btn-ghost btn-xs text-red"
                     >
                       <FaTrashAlt />
@@ -88,7 +88,7 @@ const ManageItems = () => {
                   </td>
                 </tr>
               ))}
-              {/* row 1 */}
+              {/* Other rows */}
             </tbody>
           </table>
         </div>
@@ -97,4 +97,4 @@ const ManageItems = () => {
   );
 };
 
-export default ManageItems;
+export default ManageVenues;
