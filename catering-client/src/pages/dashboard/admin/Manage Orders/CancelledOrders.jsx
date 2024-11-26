@@ -1,15 +1,15 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 
-const CompletedBookings = () => {
+const CancelledOrders = () => {
   const token = localStorage.getItem("access-token");
   const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
-  // Fetch completed orders
-  const { data: completedOrders = [], isLoading, isError } = useQuery({
-    queryKey: ["completedOrders"],
+  // Fetch cancelled orders
+  const { data: cancelledOrders = [], isLoading, isError } = useQuery({
+    queryKey: ["cancelledOrders"],
     queryFn: async () => {
-      const res = await fetch(`${BASE_URL}/orders?status=completed`, {
+      const res = await fetch(`${BASE_URL}/orders?source=cart&status=cancelled`, {
         headers: {
           authorization: `Bearer ${token}`,
         },
@@ -19,16 +19,16 @@ const CompletedBookings = () => {
     },
   });
 
-  if (isLoading) return <p>Loading completed orders...</p>;
-  if (isError) return <p>Error fetching completed orders. Try again later.</p>;
+  if (isLoading) return <p>Loading cancelled orders...</p>;
+  if (isError) return <p>Error fetching cancelled orders. Try again later.</p>;
 
   return (
     <div className="max-w-screen-2xl container mx-auto xl:px-24 px-4">
       <div className="py-10">
-        <h1 className="text-4xl font-bold mb-6">Completed Bookings</h1>
+        <h1 className="text-4xl font-bold mb-6">Cancelled Bookings</h1>
         <div className="bg-white">
-          {completedOrders.length === 0 ? (
-            <p className="text-center py-10 text-gray-600">No completed orders.</p>
+          {cancelledOrders.length === 0 ? (
+            <p className="text-center py-10 text-gray-600">No cancelled orders.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="table">
@@ -43,7 +43,7 @@ const CompletedBookings = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {completedOrders.map((order, index) => (
+                  {cancelledOrders.map((order, index) => (
                     <tr key={order._id}>
                       <td>{index + 1}</td>
                       <td>{order._id}</td>
@@ -63,4 +63,4 @@ const CompletedBookings = () => {
   );
 };
 
-export default CompletedBookings;
+export default CancelledOrders;

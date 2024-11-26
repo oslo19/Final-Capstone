@@ -6,7 +6,8 @@ const {
   updateOrderStatus,
   getConfirmedSchedulesForDay,
   updateOrder,
-  getOrderByTransactionId
+  getOrderByTransactionId,
+  getAggregatedSalesReport 
 } = require("../controllers/orderController");
 const verifyToken = require('../middleware/verifyToken');
 const router = express.Router();
@@ -27,4 +28,5 @@ router.patch("/:id/status", updateOrderStatus);
 router.get("/schedules/confirmed", getConfirmedSchedulesForDay);
 router.put('/:id', verifyToken, updateOrder);
 router.get("/:transactionId", getOrderByTransactionId);
+router.get("/sales-aggregation", getAggregatedSalesReport);
 module.exports = router;

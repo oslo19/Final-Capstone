@@ -20,28 +20,33 @@ import OrderTracking from "../pages/dashboard/OrderTracking";
 
 // Admin Pages
 import Dashboard from "../pages/dashboard/admin/Dashboard";
-import Users from "../pages/dashboard/admin/Users";
-import AddMenu from "../pages/dashboard/admin/AddMenu";
-import AddRental from "../pages/dashboard/admin/AddRental";
-import AddVenue from "../pages/dashboard/admin/AddVenue";
-import AddVoucher from "../pages/dashboard/admin/AddVoucher";
-import AddPackage from "../pages/dashboard/admin/AddPackage";
-import ManageItems from "../pages/dashboard/admin/ManageItems";
-import ManageRentals from "../pages/dashboard/admin/ManageRentals";
-import ManageVenues from "../pages/dashboard/admin/ManageVenues";
-import ManageVouchers from "../pages/dashboard/admin/ManageVouchers";
-import PendingBookings from "../pages/dashboard/admin/PendingBookings";
-import ConfirmBookings from "../pages/dashboard/admin/ConfirmBookings";
-import CompletedBookings from "../pages/dashboard/admin/CompletedBookings";
-import CancelledBookings from "../pages/dashboard/admin/CancelledBookings";
+import Users from "../pages/dashboard/admin/Manage/Users";
+import AddMenu from "../pages/dashboard/admin/Add Items/AddMenu";
+import AddRental from "../pages/dashboard/admin/Add Items/AddRental";
+import AddVenue from "../pages/dashboard/admin/Add Items/AddVenue";
+import AddVoucher from "../pages/dashboard/admin/Add Items/AddVoucher";
+import AddPackage from "../pages/dashboard/admin/Add Items/AddPackage";
+import ManageItems from "../pages/dashboard/admin/Manage/ManageItems";
+import ManageRentals from "../pages/dashboard/admin/Manage/ManageRentals";
+import ManageVenues from "../pages/dashboard/admin/Manage/ManageVenues";
+import ManageVouchers from "../pages/dashboard/admin/Manage/ManageVouchers";
+import PendingBookings from "../pages/dashboard/admin/Manage Bookings/PendingBookings";
+import ConfirmBookings from "../pages/dashboard/admin/Manage Bookings/ConfirmBookings";
+import CompletedBookings from "../pages/dashboard/admin/Manage Bookings/CompletedBookings";
+import CancelledBookings from "../pages/dashboard/admin/Manage Bookings/CancelledBookings";
+import PendingOrders from "../pages/dashboard/admin/Manage Orders/PendingOrders";
+import ConfirmOrders from "../pages/dashboard/admin/Manage Orders/ConfirmOrders";
+import CompletedOrders from "../pages/dashboard/admin/Manage Orders/CompletedOrders";
+import CancelledOrders from "../pages/dashboard/admin/Manage Orders/CancelledOrders";
 import UpdateMenu from "../pages/dashboard/admin/UpdateMenu";
 import UpdateRental from "../pages/dashboard/admin/UpdateRental";
 import UpdateVenue from "../pages/dashboard/admin/UpdateVenue";
 import UpdateVoucher from "../pages/dashboard/admin/UpdateVoucher";
-
+import SalesReport from "../pages/dashboard/admin/SalesReport";
 // Auth Pages
 import Signup from "../components/Signup";
 import Login from "../components/Login";
+import Inbox from "../pages/dashboard/admin/Inbox";
 
 // Backend Base URL
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
@@ -80,6 +85,12 @@ const adminRoutes = [
   { path: "confirm-bookings", element: <ConfirmBookings /> },
   { path: "completed-bookings", element: <CompletedBookings /> },
   { path: "cancelled-bookings", element: <CancelledBookings /> },
+  { path: "pending-orders", element: <PendingOrders/> },
+  { path: "confirm-orders", element: <ConfirmOrders /> },
+  { path: "completed-orders", element: <CompletedOrders /> },
+  { path: "cancelled-orders", element: <CancelledOrders/> },
+  { path: "salesreport", element: <SalesReport/> },
+  { path: "inbox", element: <Inbox/> },
   {
     path: "update-menu/:id",
     element: <UpdateMenu />,

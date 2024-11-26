@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import useAxiosSecure from "../../../hooks/useAxiosSecure";
-import useAxiosPublic from "../../../hooks/useAxiosPublic";
+import useAxiosSecure from "../../../../hooks/useAxiosSecure";
+import useAxiosPublic from "../../../../hooks/useAxiosPublic";
 import Swal from 'sweetalert2';
 
 const AddPackage = () => {

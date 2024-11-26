@@ -1,16 +1,18 @@
 import React from "react";
-import useVenue from "../../../hooks/useVenue";
 import { Link } from "react-router-dom";
 import { FaEdit, FaTrashAlt } from "react-icons/fa";
 import Swal from "sweetalert2";
-import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import useRental from "../../../../hooks/useRental";
+import useAxiosSecure from "../../../../hooks/useAxiosSecure";
 
-const ManageVenues = () => {
-  const [venues, , refetch] = useVenue();
+const ManageRentals = () => {
+  const [rental, , refetch] = useRental();
   const axiosSecure = useAxiosSecure();
   const BASE_URL = import.meta.env.VITE_BACKEND_URL;
-  // Handle Delete Venue
-  const handleDeleteVenue = (venue) => {
+//   console.log(menu);
+
+  //   handleDeleteItem
+  const handleDeleteItem = (item) => {
     Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -21,25 +23,25 @@ const ManageVenues = () => {
       confirmButtonText: "Yes, delete it!",
     }).then(async (result) => {
       if (result.isConfirmed) {
-        const res = await axiosSecure.delete(`/venues/${venue._id}`);
-        if (res) {
-          refetch();
-          Swal.fire({
-            title: "Deleted!",
-            text: "Your venue has been deleted.",
-            icon: "success",
-          });
-        }
+        const res = await axiosSecure.delete(`/rental/${item._id}`);
+         //console.log(res);
+       if(res) {
+        refetch();
+        Swal.fire({
+          title: "Deleted!",
+          text: "Your file has been deleted.",
+          icon: "success",
+        });
+       }
       }
     });
   };
-
   return (
     <div className="w-full md:w-[870px] px-4 mx-auto text-black">
       <h2 className="text-2xl font-semibold my-4">
-        Manage All <span className="text-prime">Venues</span>
+        Manage All <span className="text-prime">Rental Items</span>
       </h2>
-      {/* Venue item table */}
+      {/* menu item table */}
       <div>
         <div className="overflow-x-auto">
           <table className="table">
@@ -48,31 +50,29 @@ const ManageVenues = () => {
               <tr>
                 <th>#</th>
                 <th>Image</th>
-                <th>Venue Name</th>
-                <th>Capacity</th>
-                <th>Rental Price</th>
+                <th>Item Name</th>
+                <th>Price</th>
                 <th>Edit</th>
                 <th>Delete</th>
               </tr>
             </thead>
             <tbody>
-              {venues.map((venue, index) => (
+              {rental.map((item, index) => (
                 <tr key={index}>
                   <th>{index + 1}</th>
                   <td>
                     <div className="flex items-center gap-3">
                       <div className="avatar">
                         <div className="mask mask-squircle w-12 h-12">
-                          <img src={venue.image} alt="" />
+                          <img src={item.image} alt="" />
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td>{venue.venueName}</td>
-                  <td>{venue.capacity}</td>
-                  <td>₱{venue.rentalPrice}</td>
+                  <td>{item.name}</td>
+                  <td>₱{item.price}</td>
                   <td>
-                    <Link to={`/dashboard/update-venue/${venue._id}`}>
+                    <Link to={`/dashboard/update-rental/${item._id}`}>
                       <button className="btn btn-ghost btn-xs bg-prime-500 text-black">
                         <FaEdit />
                       </button>
@@ -80,7 +80,7 @@ const ManageVenues = () => {
                   </td>
                   <td>
                     <button
-                      onClick={() => handleDeleteVenue(venue)}
+                      onClick={() => handleDeleteItem(item)}
                       className="btn btn-ghost btn-xs text-red"
                     >
                       <FaTrashAlt />
@@ -88,7 +88,7 @@ const ManageVenues = () => {
                   </td>
                 </tr>
               ))}
-              {/* Other rows */}
+              {/* row 1 */}
             </tbody>
           </table>
         </div>
@@ -97,4 +97,4 @@ const ManageVenues = () => {
   );
 };
 
-export default ManageVenues;
+export default ManageRentals;
