@@ -122,28 +122,28 @@ const Navbar = () => {
         </a>
 
         {/* Navigation Items (Visible on Large Screens Only) */}
-        <ul className="hidden lg:flex space-x-6 items-center mr-2">
+        <ul className="hidden lg:flex space-x-16 items-center mx-auto">
           {navItems}
         </ul>
 
-        {/* Search Bar */}
-        <form onSubmit={handleSearch} className="relative flex-1 mx-auto max-w-md">
-          <input
-            type="search"
-            id="search-query"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="block w-full p-2 pl-10 text-sm border rounded-lg bg-gray-50 text-gray-900 focus:ring-orange-500 focus:border-orange-500"
-            placeholder="Search by RCode..."
-            required
-          />
-        </form>
+        {/* Right Menu (Search Bar, Cart, Profile/Login) */}
+        <div className="flex items-center space-x-4 ml-auto">
+          {/* Search Bar */}
+          <form onSubmit={handleSearch} className="relative flex-1 mx-auto max-w-md">
+            <input
+              type="search"
+              id="search-query"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="block w-full p-2 pl-10 text-sm border rounded-lg bg-gray-50 text-gray-900 focus:ring-orange-500 focus:border-orange-500"
+              placeholder="Search by RCode..."
+              required
+            />
+          </form>
 
-        {/* Right Menu */}
-        <div className="hidden lg:flex items-center space-x-4">
           {/* Cart */}
           {user && (
-            <Link to="/cart-page" className="relative btn btn-ghost btn-circle">
+            <Link to="/cart-page" className="btn btn-ghost btn-circle">
               <div className="indicator">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -166,13 +166,14 @@ const Navbar = () => {
             </Link>
           )}
 
-          {/* Profile */}
+          {/* Profile (Visible on Desktop) */}
           {user ? (
             <Profile user={user} />
           ) : (
             <button
               onClick={() => navigate("/login", { state: { from: location } })}
-              className="items-center px-6 py-2 text-prime bg-orange rounded-full"
+              className="flex gap-2 items-center px-6 py-2 text-prime bg-orange rounded-full lg:flex md:hidden"
+
             >
               <FaRegUser /> Login
             </button>
@@ -208,38 +209,7 @@ const Navbar = () => {
           </button>
 
           <ul className="flex flex-col space-y-4 items-center">
-            {navItems}
-
-            {/* Cart (Mobile Only) */}
-            {user && (
-              <Link
-                to="/cart-page"
-                className="relative btn btn-ghost btn-circle mt-4"
-              >
-                <div className="indicator">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  </svg>
-                  <span className="badge badge-sm indicator-item">
-                    {cart.length || 0}
-                  </span>
-                </div>
-              </Link>
-            )}
-
-            {/* Profile (Mobile Only) */}
-            {user && <Profile user={user} />}
+            {navItems}        
           </ul>
         </div>
       </div>
