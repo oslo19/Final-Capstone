@@ -7,6 +7,7 @@ import axios from "axios";
 import useAxiosPublic from "../hooks/useAxiosPublic";
 
 const Signup = () => {
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   const { signUpWithGmail, createUser, updateUserProfile } =
     useContext(AuthContext);
   const axiosPublic = useAxiosPublic();
@@ -54,21 +55,22 @@ const Signup = () => {
         // Extract full displayName
         const displayName = user?.displayName || "";
         const nameParts = displayName.split(" ");
-  
+    
         // Assuming first name consists of the first two parts (e.g., "Genard Rey")
         const firstName = nameParts.slice(0, -1).join(" ");
         // Last name is the last part (e.g., "Zozobrado")
         const lastName = nameParts[nameParts.length - 1] || "";
-  
+    
         const userInfo = {
           firstName: firstName,
           lastName: lastName,
           email: user?.email,
+          photoURL: user?.photoURL || "", // If available, otherwise set to an empty string
         };
   
-        // Saving the user info to the backend
+        // Save the user info to MongoDB after Firebase authentication
         axios
-          .post("${BASE_URL}/users", userInfo)
+          .post(`${BASE_URL}/users`, userInfo) // Use your backend URL here
           .then(() => {
             alert("Signup successful!");
             navigate(from, { replace: true });
@@ -78,14 +80,17 @@ const Signup = () => {
               alert("User already exists! Redirecting to the main page...");
               navigate(from, { replace: true });
             } else {
-              alert("There was an issue signing up. Please try again.");
+              alert("There was an issue saving your data. Please try again.");
+              console.error(error);
             }
           });
       })
       .catch((error) => {
         alert("Google sign-in failed!");
+        console.error(error);
       });
   };
+  
   
   
 
