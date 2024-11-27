@@ -1,12 +1,10 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaFacebookF, FaGithub, FaGoogle } from "react-icons/fa";
 import { useForm } from "react-hook-form";
 import useAuth from "../hooks/useAuth"; // assuming you use a hook for Firebase auth
 import axios from "axios";
-import useAxiosPublic from "../hooks/useAxiosPublic";
-import { AuthContext } from "../contexts/AuthProvider";
-
+import FacebookLogin from "@greatsumini/react-facebook-login";
 const Login = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const { login, signUpWithGmail } = useAuth(); // Custom hook handling login and Google login
@@ -80,6 +78,23 @@ const handleGoogleLogin = () => {
     });
 };
 
+const handleFacebookLogin = () => {
+  signUpWithFacebook()
+    .then((profile) => {
+      const userInfo = {
+        firstName: profile.name.split(" ")[0],
+        lastName: profile.name.split(" ").slice(1).join(" "),
+        email: profile.email,
+        photoURL: profile.picture?.data?.url || "",
+      };
+
+      axios.post(`${BASE_URL}/users`, userInfo).then(() => {
+        alert("Signin successful!");
+        navigate(from, { replace: true });
+      });
+    })
+    .catch(() => setErrorMessage("Facebook sign-in failed."));
+};
 
   return (
     <div className="max-w-md bg-white shadow w-full mx-auto flex items-center justify-center my-20">
@@ -142,8 +157,22 @@ const handleGoogleLogin = () => {
           <button onClick={handleGoogleLogin} className="btn btn-circle hover:bg-prime hover:text-white">
             <FaGoogle />
           </button>
-          {/* Other buttons */}
-          <button className="btn btn-circle hover:bg-prime hover:text-white"><FaFacebookF /></button>
+          <FacebookLogin
+          appId="1294790831529557"
+          onSuccess={(response) => {
+            console.log("Login Success!", response);
+            handleFacebookLogin();
+          }}
+          onFail={(error) => console.error("Login Failed!", error)}
+          render={({ onClick }) => (
+            <button
+              onClick={onClick}
+              className="btn btn-circle bg-prime text-white"
+            >
+              <FaFacebookF />
+            </button>
+          )}
+        />
         </div>
       </div>
     </div>
