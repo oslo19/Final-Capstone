@@ -1,5 +1,9 @@
 /* eslint-disable react/prop-types */
 import React from 'react';
+import {
+  FacebookLoginClient,
+  InitParams,
+} from "@greatsumini/react-facebook-login";
 import { createContext } from 'react';
 import { GoogleAuthProvider, RecaptchaVerifier, createUserWithEmailAndPassword, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPhoneNumber, signInWithPopup, signOut, updateProfile } from 'firebase/auth';
 import { useState } from 'react';
@@ -26,6 +30,45 @@ const AuthProvider = ({children}) => {
         return signInWithPopup(auth, googleProvider);
     }
 
+    const signUpWithFacebook = () => {
+        return new Promise((resolve, reject) => {
+          FacebookLoginClient.login((response) => {
+            if (response.authResponse) {
+              FacebookLoginClient.getProfile((profile) => {
+                resolve(profile);
+              });
+            } else {
+              reject("Facebook login failed");
+            }
+          });
+        });
+      };
+    
+      useEffect(() => {
+        const initParams = {
+          appId: "1294790831529557", // Replace with your Facebook App ID
+          version: "v12.0",
+        };
+    
+        FacebookLoginClient.init(initParams);
+    
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+          setUser(currentUser);
+          if (currentUser) {
+            const userInfo = { email: currentUser.email };
+            axios.post(`${BASE_URL}/jwt`, userInfo).then((response) => {
+              if (response.data.token) {
+                localStorage.setItem("access-token", response.data.token);
+              }
+            });
+          } else {
+            localStorage.removeItem("access-token");
+          }
+          setLoading(false);
+        });
+    
+        return () => unsubscribe();
+      }, []);
     const login = (email, password) =>{
         return signInWithEmailAndPassword(auth, email, password);
     }
@@ -81,6 +124,7 @@ const AuthProvider = ({children}) => {
         login, 
         logOut,
         signUpWithGmail,
+        signUpWithFacebook,
         updateUserProfile,
     }
 
