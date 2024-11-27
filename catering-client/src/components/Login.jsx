@@ -3,6 +3,9 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaFacebookF, FaGithub, FaGoogle } from "react-icons/fa";
 import { useForm } from "react-hook-form";
 import useAuth from "../hooks/useAuth"; // assuming you use a hook for Firebase auth
+import axios from "axios";
+import useAxiosPublic from "../hooks/useAxiosPublic";
+import { AuthContext } from "../contexts/AuthProvider";
 
 const Login = () => {
   const [errorMessage, setErrorMessage] = useState("");
@@ -32,17 +35,51 @@ const Login = () => {
   };
 
   // Login with Google
-  const handleGoogleLogin = () => {
-    signUpWithGmail()
-      .then(() => {
-        alert("Signin successful!");
-        navigate(from, { replace: true });
-      })
-      .catch((error) => {
-        console.error("Google sign-in failed:", error.message);
-        setErrorMessage("Google sign-in failed.");
-      });
-  };
+  // Login with Google
+const handleGoogleLogin = () => {
+  signUpWithGmail()
+    .then((result) => {
+      const user = result.user;
+
+      // Extract full displayName
+      const displayName = user?.displayName || "";
+      const nameParts = displayName.split(" ");
+
+      // Assuming first name consists of the first two parts (e.g., "Genard Rey")
+      const firstName = nameParts.slice(0, -1).join(" ");
+      // Last name is the last part (e.g., "Zozobrado")
+      const lastName = nameParts[nameParts.length - 1] || "";
+
+      const userInfo = {
+        firstName: firstName,
+        lastName: lastName,
+        email: user?.email,
+        photoURL: user?.photoURL || "", // If available, otherwise set to an empty string
+      };
+
+      // Save the user info to MongoDB after Firebase authentication
+      axios
+        .post(`${BASE_URL}/users`, userInfo) // Use your backend URL here
+        .then(() => {
+          alert("Signin successful!");
+          navigate(from, { replace: true });
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 409) {
+            alert("User already exists! Redirecting to the main page...");
+            navigate(from, { replace: true });
+          } else {
+            alert("There was an issue saving your data. Please try again.");
+            console.error(error);
+          }
+        });
+    })
+    .catch((error) => {
+      console.error("Google sign-in failed:", error.message);
+      setErrorMessage("Google sign-in failed.");
+    });
+};
+
 
   return (
     <div className="max-w-md bg-white shadow w-full mx-auto flex items-center justify-center my-20">
