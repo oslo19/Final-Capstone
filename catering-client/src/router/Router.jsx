@@ -48,6 +48,7 @@ import Signup from "../components/Signup";
 import Login from "../components/Login";
 import Inbox from "../pages/dashboard/admin/Inbox";
 import PrivacyPolicy from "../pages/privacy/PrivacyPolicy";
+import DataDeletion from "../pages/privacy/DataDeletion";
 
 // Backend Base URL
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
@@ -68,6 +69,7 @@ const userRoutes = [
   { path: "/book", element: <OnlineBooking /> },
   { path: "/venue", element: <Venue /> },
   { path: "/privacy-policy", element: <PrivacyPolicy/> },
+  { path: "/data-deletion", element: <DataDeletion/> },
 ];
 
 // Admin Routes
