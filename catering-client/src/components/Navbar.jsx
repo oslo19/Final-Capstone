@@ -30,23 +30,25 @@ const Navbar = () => {
 
   const handleSearch = async (event) => {
     event.preventDefault();
-
+  
     if (!searchQuery) {
       Swal.fire("Error", "Please enter an RCode to search.", "error");
       return;
     }
-
+  
     try {
       const response = await fetch(`${BASE_URL}/orders/${searchQuery}`);
       if (!response.ok) {
         throw new Error("Order not found.");
       }
-
+  
       const orderData = await response.json();
-
+  
       if (orderData.source === "booking") {
-        navigate("/order", { state: { order: orderData } });
+        // Navigate to /order/:transactionId for booking source
+        navigate(`/order/${orderData.transactionId}`, { state: { order: orderData } });
       } else if (orderData.source === "cart") {
+        // Navigate to /order-tracking/:transactionId for cart source
         navigate(`/order-tracking/${orderData.transactionId}`);
       } else {
         throw new Error("Invalid order source.");
@@ -55,6 +57,7 @@ const Navbar = () => {
       Swal.fire("Error", error.message, "error");
     }
   };
+  
 
   const navItems = (
     <>
@@ -122,7 +125,7 @@ const Navbar = () => {
         </a>
 
         {/* Navigation Items (Visible on Large Screens Only) */}
-        <ul className="hidden lg:flex space-x-16 items-center mx-auto">
+        <ul className="hidden lg:flex space-x-4 items-center mx-auto">
           {navItems}
         </ul>
 

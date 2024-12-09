@@ -211,6 +211,7 @@ const OnlineBooking = () => {
           handleMenuToggleModal={handleMenuToggleModal}
           menuItems={menu}
           selectedMenuType={selectedMenuType}
+          numberOfPax={numberOfPax}
         />
 
         {/* Display current booking cart items */}

@@ -10,11 +10,12 @@ const fs = require("fs");
 require('dotenv').config()
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const corsOptions = {
-  origin: ["http://213.210.37.18"], // Add your frontend's IP or domain
+  origin: ["http://localhost:5173"], // Add your frontend's IP or domain
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true,
 };
 
+const admin = require('./api/config/firebaseAdmin');
 // middleware
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -23,7 +24,7 @@ const contractsDir = path.resolve(__dirname, "./uploads/contracts");
 if (!fs.existsSync(contractsDir)) {
   fs.mkdirSync(contractsDir, { recursive: true });
 }
-
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // mongodb configuration using mongoose
 
 mongoose
@@ -60,6 +61,7 @@ const packageRoutes = require('./api/routes/packageRoutes');
 const otpRoutes = require('./api/routes/otpRoutes');
 const orderRoutes = require('./api/routes/orderRoutes');  
 const contractRoutes = require("./api/routes/contractRoutes");
+
 app.use('/menu', menuRoutes)
 app.use('/carts', cartRoutes);
 app.use('/users', userRoutes);

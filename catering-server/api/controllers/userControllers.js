@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const OTP = require("../models/Otp")
+const admin = require('../config/firebaseAdmin'); 
 const defaultCoordinates = [10.239613, 123.780381];
 // get all users
 const getAllUsers = async (req, res) => {
@@ -142,6 +143,65 @@ const updateUserMobile = async (req, res) => {
 };
 
 
+const checkEmailExists = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (user) {
+      // Email exists in the database
+      return res.status(200).json({
+        exists: true,
+        message: 'Email exists. You can send a reset password link.',
+      });
+    } else {
+      // Email does not exist in the database
+      return res.status(200).json({ exists: false, message: 'Email not found in the database.' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Fetch a user's mobile number
+const getUserMobile = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id); // Assuming you're using MongoDB
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({ mobileNumber: user.mobileNumber });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+// Check if mobile number exists
+const checkMobileExists = async (req, res) => {
+  const { phone_number } = req.params;  // Extract the mobile number from the URL
+
+  try {
+    const user = await User.findOne({ mobileNumber: phone_number });
+
+    if (user) {
+      // Mobile number exists in the database
+      return res.status(200).json({
+        exists: true,
+        message: 'This mobile number is already registered.',
+      });
+    } else {
+      // Mobile number does not exist in the database
+      return res.status(200).json({ exists: false, message: 'This mobile number is available.' });
+    }
+  } catch (error) {
+    console.error("Error checking mobile number:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 
 module.exports = {
   getAllUsers,
@@ -150,5 +210,8 @@ module.exports = {
   getAdmin,
   makeAdmin,
   updateUserAddress,
-  updateUserMobile
+  updateUserMobile,
+  checkEmailExists,
+  getUserMobile,
+  checkMobileExists
 };

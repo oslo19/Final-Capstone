@@ -4,6 +4,7 @@ import { AuthContext } from '../contexts/AuthProvider';
 import axios from 'axios'; // Ensure axios is installed and imported
 
 const useUsers = () => {
+    
     const token = localStorage.getItem('access-token');
     const BASE_URL = import.meta.env.VITE_BACKEND_URL;
     const { refetch, data: users = [], isLoading: isUserLoading } = useQuery({

@@ -7,7 +7,6 @@ import {
   FaPlusCircle,
   FaQuestionCircle,
   FaShoppingBag,
-  FaUser,
 } from "react-icons/fa";
 import { FaCartShopping } from "react-icons/fa6";
 import Login from "../components/Login";
@@ -24,16 +23,6 @@ const sharedLinks = (
     <li>
       <Link to="/menu">
         <FaCartShopping /> Menu
-      </Link>
-    </li>
-    <li>
-      <Link to="/menu">
-        <FaLocationArrow /> Orders Tracking
-      </Link>
-    </li>
-    <li>
-      <Link to="/menu">
-        <FaQuestionCircle /> Customer Support
       </Link>
     </li>
   </>
@@ -131,6 +120,12 @@ const SidebarContent = () => (
             <Link to="/dashboard/manage-venues">Manage Venues</Link>
           </li>
           <li>
+            <Link to="/dashboard/manage-packages">Manage Packages</Link>
+          </li>
+          <li>
+            <Link to="/dashboard/manage-contracts">Manage Contracts</Link>
+          </li>
+          <li>
             <Link to="/dashboard/manage-vouchers">Manage Vouchers</Link>
           </li>
           <li>
@@ -140,10 +135,10 @@ const SidebarContent = () => (
       </details>
     </li>
     <li>
-            <Link to="/dashboard/salesreport">Sales Report</Link>   
+      <Link to="/dashboard/salesreport">Sales Report</Link>
     </li>
     <li>
-            <Link to="/dashboard/inbox">Inbox</Link>   
+      <Link to="/dashboard/inbox">Inbox</Link>
     </li>
     <hr />
     {sharedLinks}
@@ -155,8 +150,18 @@ const DashboardLayout = () => {
   const [isAdmin] = useAdmin();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isClicked, setIsClicked] = useState(false);
+  const [notifications, setNotifications] = useState([
+    { message: "New order received", link: "/dashboard/pending-orders" },
+    { message: "Booking confirmed", link: "/dashboard/confirm-bookings" },
+  ]);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
   const toggleProfileDropdown = () => {
     setIsProfileOpen((prev) => !prev);
+  };
+
+  const toggleNotificationPopover = () => {
+    setIsNotificationOpen((prev) => !prev);
   };
 
   return (
@@ -165,7 +170,7 @@ const DashboardLayout = () => {
         <div>
           {/* Navbar */}
           <div className="navbar bg-base-100 shadow-md fixed top-0 left-0 right-0 z-50">
-          <div className="navbar-start">
+            <div className="navbar-start">
               <label
                 htmlFor="my-drawer"
                 className="btn btn-ghost btn-circle drawer-button"
@@ -215,25 +220,7 @@ const DashboardLayout = () => {
             </div>
 
             <div className="navbar-end">
-              <button className="btn btn-ghost btn-circle">
-                <div className="indicator">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                    />
-                  </svg>
-                  <span className="badge badge-xs badge-primary indicator-item"></span>
-                </div>
-              </button>
+              {/* Profile Dropdown */}
               <div className="dropdown dropdown-end">
                 <div
                   tabIndex={0}
@@ -249,9 +236,7 @@ const DashboardLayout = () => {
                   </div>
                 </div>
                 {isProfileOpen && (
-                  <ul
-                    className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
-                  >
+                  <ul className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
                     <li>
                       <button
                         onClick={() => {

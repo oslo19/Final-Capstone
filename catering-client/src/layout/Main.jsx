@@ -5,6 +5,7 @@ import "../../src/App.css";
 import Footer from "../components/Footer";
 import { AuthContext } from "../contexts/AuthProvider";
 import LoadingSpinner from "../components/LoadingSpinner";
+import Chatbot from "../components/Chatbot";
 
 const Main = () => {
   const { loading } = useContext(AuthContext);

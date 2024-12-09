@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 const orderSchema = new Schema(
   {
     email: { type: String, required: true },
-    transactionId: { type: String, required: true },
+    transactionId: { type: String, required: true, unique: true },
     firstName: { type: String, required: true }, 
     lastName: { type: String, required: true },
     modeOfPayment: { type: String, required: true },

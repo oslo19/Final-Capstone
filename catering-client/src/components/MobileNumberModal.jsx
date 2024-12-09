@@ -4,73 +4,94 @@ import { CgSpinner } from "react-icons/cg";
 import Swal from "sweetalert2";
 import useAxiosSecure from "../hooks/useAxiosSecure";
 import { AuthContext } from "../contexts/AuthProvider";
-import { getAuth, PhoneAuthProvider, reauthenticateWithCredential } from "firebase/auth";
+import axios from "axios";
 
-const MobileNumberModal = ({ mobileNumber, confirmationResult, currentUserId, onClose }) => {
+const MobileNumberModal = ({ mobileNumber, confirmationResult, currentUserId, onClose}) => {
   const [otp, setOtp] = useState(""); // OTP input state
   const [isButtonDisabled, setIsButtonDisabled] = useState(true); // Button state
   const [isVerifying, setIsVerifying] = useState(false); // Spinner state
   const modalRef = useRef(null); // Ref to access the dialog
-  const axiosSecure = useAxiosSecure();  
-  const { auth } = useContext(AuthContext);
-  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
-  // Show the modal once the component mounts
+  const axiosSecure = useAxiosSecure();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [otpStatus, setOtpStatus] = useState("");
+  
+console.log(otp)
   useEffect(() => {
     if (modalRef.current) modalRef.current.showModal();
   }, []);
 
-  
   // Enable button only if OTP is exactly 6 digits
   useEffect(() => {
     setIsButtonDisabled(otp.length !== 6);
   }, [otp]);
-
-  // Log only when necessary (e.g., when the modal opens or OTP submission succeeds)
-  useEffect(() => {
-    console.log("Current User ID:", currentUserId); // Log once when the modal opens
-  }, [currentUserId]);
-
-
 
   const handleClose = () => {
     if (modalRef.current) modalRef.current.close(); // Close the modal
     onClose(); // Notify the parent component to hide the modal
   };
 
+  // Handle OTP verification
   const handleVerifyOTP = async () => {
-    setIsVerifying(true); // Show spinner
-
+    setIsVerifying(true);  // Show spinner
+  
+    // Format the mobile number before sending it
+    
+  
     try {
-        const response = await axiosSecure.post('/otp/verify-code', {
-            phone_number: mobileNumber,
-            code: otp,
-        });
-
-        if (response.status === 200) {
-            const saveResponse = await axiosSecure.put(`/users/${currentUserId}/mobile`, {
-                phone_number: mobileNumber,
-            });
-
-            if (saveResponse.status === 200) {
-                Swal.fire("Success", "Mobile number verified and saved!", "success");
-                handleClose(); // Close the modal
-            } else {
-                throw new Error(saveResponse.data.message || "Failed to save mobile number");
-            }
-        } else {
-            throw new Error(response.data.message || "OTP verification failed");
-        }
+      const response = await axiosSecure.post("/otp/verify-code", {
+        phone_number: mobileNumber, 
+        code: otp,
+      });
+  
+      if (response.status === 200) {
+        // OTP verified successfully
+        Swal.fire("Success", "Mobile number verified!", "success");
+        onClose(); // Close the modal after successful verification
+      } else {
+        throw new Error(response.data.message || "OTP verification failed.");
+      }
     } catch (error) {
-        console.error("Error verifying OTP:", error); // Log the error
-        Swal.fire("Error", error.message, "error");
+      Swal.fire("Error", error.message, "error");
     } finally {
-        setIsVerifying(false); // Hide spinner
+      setIsVerifying(false); // Hide spinner
     }
-};
+  };
+  
+  
+
+
+  const handleResendOtp = async () => {
+    setIsSubmitting(true);  // Show spinner
+    setOtpStatus(""); 
+    const formattedNumber = `+63${mobileNumber.startsWith("0") ? mobileNumber.slice(1) : mobileNumber}`;
+  
+    try {
+      const response = await axios.get(`/otp/otp/check-expiry/${mobileNumber}`);
+      // Send OTP again to the phone number
+      const otpResponse = await axiosSecure.post("/otp/send-code", {
+        phone_number: mobileNumber,
+      });
+  
+      if (otpResponse.status === 200) {
+        console.log("OTP sent successfully:", otpResponse.data);
+        setOtpStatus({ message: "OTP has been resent successfully!", color: "green" });
+      } else {
+        throw new Error(otpResponse.data.message || "An OTP has already been sent. Please wait for it to expire before requesting a new one.");
+      }
+    } catch (error) {
+      console.error("Error resending OTP:", error);
+      setOtpStatus({ message: "An OTP has already been sent. Please wait for it to expire before requesting a new one.", color: "red" });
+    } finally {
+      setIsSubmitting(false);  // Hide spinner after the process is complete
+    }
+  };
+  
+  
+  
 
 
   return (
-    <dialog ref={modalRef} className="modal">
+    <dialog ref={modalRef} className="modal z-0">
       <div className="modal-box max-w-3xl text-black">
         <h3 className="font-bold text-2xl">Verify your mobile number</h3>
         <p className="py-4 text-lg font-normal my-6">
@@ -99,11 +120,19 @@ const MobileNumberModal = ({ mobileNumber, confirmationResult, currentUserId, on
 
         <p className="text-center">
           Didn&#x27;t receive it?{" "}
-          <span className="btn btn-ghost" onClick={() => window.location.reload()}>
+          <span className="btn btn-ghost" onClick={handleResendOtp}>
             Resend Code
           </span>
         </p>
 
+           {/* Display OTP status message */}
+        {otpStatus && (
+          <p className="text-center my-4" style={{ color: otpStatus.color }}>
+            {otpStatus.message}
+          </p>
+        )}
+
+        
         <button
           onClick={handleClose}
           className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"

@@ -44,4 +44,37 @@ const getUserContracts = async (req, res) => {
   }
 };
 
-module.exports = { uploadContract, getUserContracts };
+
+// Delete a contract
+const deleteContract = async (req, res) => {
+  try {
+    const contractId = req.params.contractId;
+
+    // Find the contract and delete the file from the server
+    const contract = await Contract.findById(contractId);
+    if (!contract) {
+      return res.status(404).json({ message: "Contract not found." });
+    }
+
+    // Delete the contract file from the server
+    fs.unlinkSync(contract.filePath);  // Delete the file from the file system
+
+    // Delete the contract document from the database
+    await Contract.findByIdAndDelete(contractId);
+
+    res.status(200).json({ message: "Contract deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting contract:", error);
+    res.status(500).json({ message: "Failed to delete contract." });
+  }
+};
+
+const getAllContracts = async (req, res) => {
+  try {
+    const contracts = await Contract.find().sort({ uploadedAt: -1 });
+    res.status(200).json(contracts);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+module.exports = { uploadContract, getUserContracts, deleteContract, getAllContracts };

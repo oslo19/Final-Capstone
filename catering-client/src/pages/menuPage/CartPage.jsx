@@ -119,9 +119,21 @@ const CartPage = () => {
   };
 
   const handleProceedToCheckout = () => {
-    navigate("/process-checkout", { state: { orderTotal } });
+    const cartData = cart.map(item => ({
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+    }));
+  
+    navigate("/process-checkout", {
+      state: {
+        orderTotal,   // The total amount after discount
+        source: "cart", // Add source "cart"
+        cartItems: cartData, // Pass the cart items data
+      },
+    });
   };
-
+  
   const handleQuantityChange = async (item, newQuantity) => {
     // If the input is empty, reset the quantity to 1
     if (newQuantity === "") {

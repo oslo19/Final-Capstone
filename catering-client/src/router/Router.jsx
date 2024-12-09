@@ -6,7 +6,7 @@ import PrivateRoute from "../PrivateRoute/PrivateRoute";
 // User Pages
 import Home from "../pages/home/Home";
 import Menu from "../pages/menuPage/Menu";
-import Order from "../pages/dashboard/OrderSummary";
+import OrderSummary from "../pages/dashboard/OrderSummary";
 import UserProfile from "../pages/dashboard/UserProfile";
 import CartPage from "../pages/menuPage/CartPage";
 import Payment from "../pages/menuPage/Payment";
@@ -29,6 +29,7 @@ import AddPackage from "../pages/dashboard/admin/Add Items/AddPackage";
 import ManageItems from "../pages/dashboard/admin/Manage/ManageItems";
 import ManageRentals from "../pages/dashboard/admin/Manage/ManageRentals";
 import ManageVenues from "../pages/dashboard/admin/Manage/ManageVenues";
+import ManagePackages from "../pages/dashboard/admin/Manage/ManagePackages";
 import ManageVouchers from "../pages/dashboard/admin/Manage/ManageVouchers";
 import PendingBookings from "../pages/dashboard/admin/Manage Bookings/PendingBookings";
 import ConfirmBookings from "../pages/dashboard/admin/Manage Bookings/ConfirmBookings";
@@ -49,6 +50,7 @@ import Login from "../components/Login";
 import Inbox from "../pages/dashboard/admin/Inbox";
 import PrivacyPolicy from "../pages/privacy/PrivacyPolicy";
 import DataDeletion from "../pages/privacy/DataDeletion";
+import ManageContracts from "../pages/dashboard/admin/Manage/ManageContracts";
 
 // Backend Base URL
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
@@ -57,7 +59,7 @@ const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const userRoutes = [
   { path: "/", element: <Home /> },
   { path: "/menu", element: <Menu /> },
-  { path: "/order", element: <Order /> },
+  { path: "/order/:transactionId", element: <OrderSummary/> },
   { path: "/order-tracking/:transactionId", element: <OrderTracking /> },
   { path: "/update-profile", element: <UserProfile /> },
   { path: "/cart-page", element: <CartPage /> },
@@ -84,6 +86,8 @@ const adminRoutes = [
   { path: "manage-items", element: <ManageItems /> },
   { path: "manage-rentals", element: <ManageRentals /> },
   { path: "manage-venues", element: <ManageVenues /> },
+  { path: "manage-packages", element: <ManagePackages /> },
+  { path: "manage-contracts", element: <ManageContracts /> },
   { path: "manage-vouchers", element: <ManageVouchers /> },
   { path: "pending-bookings", element: <PendingBookings /> },
   { path: "confirm-bookings", element: <ConfirmBookings /> },
@@ -110,6 +114,7 @@ const adminRoutes = [
     element: <UpdateVenue />,
     loader: ({ params }) => fetch(`${BASE_URL}/venues/${params.id}`),
   },
+
   {
     path: "update-voucher/:id",
     element: <UpdateVoucher />,

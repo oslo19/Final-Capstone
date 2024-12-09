@@ -1,60 +1,75 @@
 import React from "react";
 import { FaBuilding } from "react-icons/fa";
 import { useForm } from "react-hook-form";
-import useAxiosPublic from "../../../../hooks/useAxiosPublic";
-import useAxiosSecure from "../../../../hooks/useAxiosSecure";
 import Swal from "sweetalert2";
+import useAxiosSecure from "../../../../hooks/useAxiosSecure";
 
 const AddVenue = () => {
   const { register, handleSubmit, reset } = useForm();
-  const axiosPublic = useAxiosPublic();
   const axiosSecure = useAxiosSecure();
   const BASE_URL = import.meta.env.VITE_BACKEND_URL;
-  // Image hosting key
-  const image_hosting_key = import.meta.env.VITE_IMAGE_HOSTING_KEY;
-  const image_hosting_api = `https://api.imgbb.com/1/upload?key=${image_hosting_key}`;
+
+  // Cloudinary Configuration
+  const cloudinaryUploadUrl = `https://api.cloudinary.com/v1_1/dtg6ofu1q/image/upload`;
+  const uploadPreset = "unsigned_preset"; 
 
   const onSubmit = async (data) => {
-    const uploadedImages = [];
-    const imageFiles = data.image; // Array of images
+    try {
+        const uploadedImages = [];
+        const imageFiles = data.image; // Array of images
 
-    // Upload all images to image hosting
-    for (let i = 0; i < imageFiles.length; i++) {
-      const formData = new FormData();
-      formData.append("image", imageFiles[i]);
-      const hostingImg = await axiosPublic.post(image_hosting_api, formData);
+        // Upload all images to Cloudinary
+        for (let i = 0; i < imageFiles.length; i++) {
+            const formData = new FormData();
+            formData.append("file", imageFiles[i]); // Attach the image file
+            formData.append("upload_preset", uploadPreset); // Cloudinary upload preset
 
-      if (hostingImg.data.success) {
-        uploadedImages.push(hostingImg.data.data.display_url);
-      }
-    }
+            const response = await fetch(cloudinaryUploadUrl, {
+                method: "POST",
+                body: formData,
+            });
 
-    if (uploadedImages.length > 0) {
-      const venueData = {
-        venueName: data.venueName,
-        venueType: data.venueType,
-        description: data.description,
-        address: data.address,
-        capacity: parseInt(data.capacity),
-        rentalPrice: parseFloat(data.rentalPrice),
-        images: uploadedImages, // Save multiple image URLs
-      };
+            const jsonResponse = await response.json();
 
-      // Post the venue data
-      const postVenue = await axiosSecure.post("/venues", venueData);
+            if (response.ok) {
+                uploadedImages.push(jsonResponse.secure_url); // Push the secure URL to the array
+            }
+        }
 
-      if (postVenue) {
-        reset();
+        if (uploadedImages.length > 0) {
+            const venueData = {
+                venueName: data.venueName,
+                venueType: data.venueType,
+                description: data.description,
+                address: data.address,
+                capacity: parseInt(data.capacity),
+                rentalPrice: parseFloat(data.rentalPrice),
+                images: uploadedImages, // Save multiple image URLs
+            };
+
+            // Post the venue data
+            const postVenue = await axiosSecure.post("/venues", venueData);
+
+            if (postVenue) {
+                reset();
+                Swal.fire({
+                    position: "top-end",
+                    icon: "success",
+                    title: "Venue added successfully!",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+            }
+        }
+    } catch (error) {
+        console.error("Error uploading images:", error);
         Swal.fire({
-          position: "top-end",
-          icon: "success",
-          title: "Venue added successfully!",
-          showConfirmButton: false,
-          timer: 1500,
+            icon: "error",
+            title: "Oops...",
+            text: "There was an error uploading the images. Please try again.",
         });
-      }
     }
-  };
+};
 
   return (
     <div className="w-full md:w-[870px] px-4 mx-auto">
@@ -65,6 +80,7 @@ const AddVenue = () => {
       {/* Form */}
       <div>
         <form onSubmit={handleSubmit(onSubmit)}>
+          {/* Venue Name */}
           <div className="form-control w-full">
             <label className="label">
               <span className="label-text">Venue Name*</span>
@@ -77,7 +93,7 @@ const AddVenue = () => {
             />
           </div>
 
-          {/* 2nd row */}
+          {/* Venue Type & Capacity */}
           <div className="flex items-center gap-4">
             {/* Venue Type */}
             <div className="form-control w-full my-6">
@@ -114,23 +130,20 @@ const AddVenue = () => {
             </div>
           </div>
 
-          {/* 3rd row */}
-          <div className="flex items-center gap-4">
-            {/* Rental Price */}
-            <div className="form-control w-full">
-              <label className="label">
-                <span className="label-text">Rental Price*</span>
-              </label>
-              <input
-                type="number"
-                {...register("rentalPrice", { required: true })}
-                placeholder="Rental Price"
-                className="input input-bordered w-full"
-              />
-            </div>
+          {/* Rental Price */}
+          <div className="form-control w-full my-6">
+            <label className="label">
+              <span className="label-text">Rental Price*</span>
+            </label>
+            <input
+              type="number"
+              {...register("rentalPrice", { required: true })}
+              placeholder="Rental Price"
+              className="input input-bordered w-full"
+            />
           </div>
 
-          {/* 4th row */}
+          {/* Description */}
           <div className="form-control">
             <label className="label">
               <span className="label-text">Description*</span>
@@ -142,7 +155,7 @@ const AddVenue = () => {
             ></textarea>
           </div>
 
-          {/* 5th row */}
+          {/* Address */}
           <div className="form-control">
             <label className="label">
               <span className="label-text">Address*</span>

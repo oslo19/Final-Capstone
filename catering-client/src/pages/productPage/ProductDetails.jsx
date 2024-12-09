@@ -120,20 +120,27 @@ const ProductDetails = ({ item }) => {
         quantity: product.quantity,
         image: product.image,
       };
-
+  
       axios
         .post(`${BASE_URL}/carts`, cartItem)
         .then((response) => {
           console.log(response);
+  
+          // If item was successfully added, update cart state and show success message
           if (response) {
-            refetch(); // refetch cart
+            // Assuming `setCart` is a function to update the cart state directly
+            refetch();  // Optionally refetch cart data from server, but this is not always necessary
             Swal.fire({
               position: "center",
               icon: "success",
-              title: "Food added on the cart.",
+              title: "Food added to the cart.",
               showConfirmButton: false,
               timer: 1500,
             });
+            
+            // Update cart state or context to reflect changes instantly
+            refetch();  // If using a hook like useCart, this will update the cart data
+  
           }
         })
         .catch((error) => {
@@ -162,6 +169,7 @@ const ProductDetails = ({ item }) => {
       });
     }
   };
+  
 
   const handleInputChange = async (value) => {
     const newQuantity = parseInt(value, 10);
@@ -368,7 +376,6 @@ const ProductDetails = ({ item }) => {
                     data-original="#000000"
                   />
                 </svg>
-                Free delivery on order
               </div>
             </div>
           </div>

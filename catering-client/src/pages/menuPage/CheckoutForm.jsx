@@ -23,10 +23,12 @@ import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import paypal from "../../assets/paypal.png";
 import { v4 as uuidv4 } from "uuid";
 
+
 const defaultCoordinates = [10.239613, 123.780381];
 const CheckoutForm = () => {
   const { users, refetch } = useUsers();
   const location = useLocation();
+
   const axiosSecure = useAxiosSecure();
   const { user, sendOtp } = useContext(AuthContext); // Get user from context
   const [coordinates, setCoordinates] = useState(null);
@@ -42,6 +44,10 @@ const CheckoutForm = () => {
   const [cart] = useCart();
   const [isMobileNumberModalVisible, setIsMobileNumberModalVisible] =
     useState(false);
+  const [otpRecord, setOtpRecord] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mobileError, setMobileError] = useState(null);
   const [mobileNumber, setMobileNumber] = useState("");
   const [isMobileEditing, setIsMobileEditing] = useState(false);
   const [isSaveEnabled, setIsSaveEnabled] = useState(false);
@@ -59,6 +65,7 @@ const CheckoutForm = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [transactionId, setTransactionId] = useState("");
+  const [hasMobileNumber, setHasMobileNumber] = useState(false);
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
@@ -69,12 +76,16 @@ const CheckoutForm = () => {
     menuItems = [],
     rentalItems = [],
     venueItems = [],
+    cartItems = [],  
     orderTotal = 0,
     source,
     typeOfEvent,
     numberOfPax,
     typeOfMenu,
+
   } = location.state || {}; // Destructure the state values
+
+
 
   const [paymentAmount, setPaymentAmount] = useState(orderTotal);
   useEffect(() => {
@@ -182,12 +193,19 @@ const CheckoutForm = () => {
         setFirstName(first || "");
         setLastName(last || "");
       }
-
-      if (currentUser && currentUser.mobileNumber) {
-        setMobileNumber(currentUser.mobileNumber);
+  
+      // Check if currentUser has mobile number and set the state accordingly
+      if (currentUser) {
+        if (currentUser.mobileNumber) {
+          setMobileNumber(currentUser.mobileNumber);
+          setHasMobileNumber(true); // User has a mobile number
+        } else {
+          setHasMobileNumber(false); // User doesn't have a mobile number
+        }
       }
     }
   }, [user, currentUser]);
+  
 
   {
     /*User END */
@@ -312,31 +330,64 @@ const CheckoutForm = () => {
     closeModal();
   };
 
-  const fetchUnavailableDates = async () => {
-    try {
-      const response = await fetch(`${BASE_URL}/orders/schedules/confirmed`);
-      const data = await response.json();
-
-      // Ensure data is an array; fallback to an empty array if it's not
-      setUnavailableDates(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Error fetching unavailable dates:", error);
-      setUnavailableDates([]); // Fallback to an empty array on error
-    }
-  };
-
   useEffect(() => {
-    if (unavailableDates.length > 0) {
-      console.log("Unavailable Dates:", unavailableDates);
-    }
-  }, [unavailableDates]);
+    const fetchConfirmedOrders = async () => {
+      try {
+        // Fetch only confirmed orders from the backend
+        const response = await axios.get(`${BASE_URL}/orders/confirmed`);  
+        
+        // Set the confirmed orders in the state
+        const confirmedOrders = response.data;
+  
+        console.log("Confirmed orders fetched:", confirmedOrders); // Debug: Log the confirmed orders
+  
+        // Create a map to store count of each schedule date
+        const scheduleDateCount = {};
+  
+        // Iterate through the orders to count occurrences of each schedule date
+        confirmedOrders.forEach(order => {
+          const formattedDate = new Date(order.schedule).toLocaleDateString('en-US', {
+            month: '2-digit',
+            day: '2-digit'
+          }).replace('/', '-'); // Change '/' to '-' for "MM-DD" format
+  
+          // Increment the count for this date
+          if (scheduleDateCount[formattedDate]) {
+            scheduleDateCount[formattedDate] += 1;
+          } else {
+            scheduleDateCount[formattedDate] = 1;
+          }
+        });
+  
+        // Now, filter the dates that appear 3 or more times
+        const unavailableDatesSet = new Set();
+        Object.keys(scheduleDateCount).forEach(date => {
+          if (scheduleDateCount[date] >= 3) {
+            unavailableDatesSet.add(date); // Only add dates that appear 3 or more times
+            console.log(`Date ${date} has ${scheduleDateCount[date]} occurrences`);
+          }
+        });
+  
+        // Convert the Set back to an array and update the state
+        setUnavailableDates(Array.from(unavailableDatesSet));
+  
+      } catch (error) {
+        console.error("Error fetching confirmed orders:", error);
+        Swal.fire("Error", "Failed to fetch confirmed orders.", "error");
+      }
+    };
+  
+    fetchConfirmedOrders();
+  }, []); // This runs once when the component mounts
+  
+  
+  
+  
+  
+  
+  console.log(unavailableDates)
 
-  // Fetch unavailable dates when the modal is opened
-  useEffect(() => {
-    if (isModalVisible) {
-      fetchUnavailableDates();
-    }
-  }, [isModalVisible]);
+
 
   const handleStandardDelivery = () => {
     const now = dayjs(); // Current time
@@ -354,6 +405,10 @@ const CheckoutForm = () => {
   {
     /* Mobile Logic or Personal Details */
   }
+
+  
+  
+  
   const isValidMobileNumber = (value) => {
     const numberWithoutCountryCode = value.replace(/^\+63/, ""); // Remove +63 prefix if present
     return /^\d{9,12}$/.test(numberWithoutCountryCode); // Validate the remaining digits (9 to 12)
@@ -363,45 +418,87 @@ const CheckoutForm = () => {
     const value = e.target.value;
     setMobileNumber(value);
 
-    // Enable the Save button if the input matches the valid pattern
+    // Check validity and set error message
+    if (isValidMobileNumber(value)) {
+      setMobileError(null);
+    } else {
+      setMobileError(
+        "Invalid mobile number. Please enter a valid phone number."
+      );
+    }
+
+    // Enable the Save button if valid, else disable it
     setIsSaveEnabled(isValidMobileNumber(value));
   };
+
+  
+
   const handleSubmitMobileNumber = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+  
     const formattedNumber = `+63${
       mobileNumber.startsWith("0") ? mobileNumber.slice(1) : mobileNumber
     }`;
-
+  
     try {
-      console.log("Saving phone number:", formattedNumber); // Debugging log
-
-      // Save mobile number to the current user's profile
-      const response = await axiosSecure.patch(
-        `/users/${currentUser._id}/mobile`,
-        {
-          phone_number: formattedNumber,
-        }
-      );
-
-      if (response.status === 200) {
-        await refetch();
-
-        const updatedUser = users.find((u) => u.email === user.email);
-        if (updatedUser && updatedUser.mobileNumber) {
-          setMobileNumber(updatedUser.mobileNumber); // Display the formatted number
-        }
-
-        setIsMobileNumberModalVisible(true); // Show the OTP modal
+      const checkNumberResponse = await axiosSecure.get(`/users/check-mobile/${formattedNumber}`);
+    
+      if (checkNumberResponse.data.exists) {
+      
+        Swal.fire({
+          title: "Error",
+          text: "This mobile number is already registered.",
+          icon: "error",
+          confirmButtonText: "Okay"
+        });
+        setIsSubmitting(false);
+        return;
       } else {
-        throw new Error(
-          response.data.message || "Failed to save mobile number"
-        );
+        const otpResponse = await axiosSecure.post("/otp/send-code", {
+          phone_number: formattedNumber,
+        });
+    
+        if (otpResponse.status === 200) {
+          console.log("OTP sent successfully:", otpResponse.data);
+          console.log("OTP Record from Backend:", otpResponse.data.otpRecord);
+    
+          // Store the OTP record in the state
+          setOtpRecord(otpResponse.data.otpRecord);
+    
+          await axiosSecure.patch(`/users/${currentUser._id}/mobileNumber`, {
+            phone_number: formattedNumber,
+          });
+    
+          const updatedUserResponse = await axiosSecure.get(
+            `/users/${currentUser._id}/mobileNumber`
+          );
+          
+          // Update mobile number state after getting the response
+          const updatedMobileNumber = updatedUserResponse.data.mobileNumber;
+          setMobileNumber(updatedMobileNumber); // Update state with the new number
+    
+      
+    
+
+          setTimeout(() => {
+            setIsSubmitting(false);
+            setIsMobileNumberModalVisible(true); 
+          }, 2000); 
+        } else {
+          throw new Error(otpResponse.data.message || "Failed to send OTP");
+        }
       }
+      
+      
     } catch (error) {
-      console.error("Error saving mobile number:", error); // Log the error
-      Swal.fire("Error", error.message, "error");
+      Swal.fire("An OTP has already been sent. Please wait for it to expire before requesting a new one.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
+  
+
   const handleCloseMobileModal = () => {
     setIsMobileNumberModalVisible(false);
   };
@@ -414,8 +511,12 @@ const CheckoutForm = () => {
 
     console.log("Generated Transaction ID:", newTransactionId);
   };
+  
 
-  const hasMobileNumber = currentUser && currentUser.mobileNumber;
+  useEffect(() => {
+    console.log("Updated mobile number:", mobileNumber);  // Debugging line
+  }, [mobileNumber]);
+  
   const handleEditClick = () => setIsMobileEditing(!isMobileEditing);
   {
     /* Mobile Logic or Personal Details LOGIC END*/
@@ -514,6 +615,9 @@ const CheckoutForm = () => {
       );
       return;
     }
+    console.log(currentUser)
+    refetch(); 
+   
 
     setIsProcessing(true);
 
@@ -548,6 +652,7 @@ const CheckoutForm = () => {
           rentalItems,
           venueItems,
         },
+        cartItems,
         typeOfEvent,
         numberOfPax,
         typeOfMenu,
@@ -578,7 +683,7 @@ const CheckoutForm = () => {
         "success"
       );
       if (source === "booking") {
-        navigate("/order"); // Navigate to booking orders
+        navigate(`/order/${result.order.transactionId}`); // Navigate to booking orders
       } else {
         navigate(`/order-tracking/${result.order.transactionId}`);
       }
@@ -589,6 +694,7 @@ const CheckoutForm = () => {
       setIsProcessing(false);
     }
   };
+
 
   useEffect(() => {
     if (source !== "booking") {
@@ -1111,11 +1217,9 @@ const CheckoutForm = () => {
                                 }
                               }}
                               shouldDisableDate={(date) =>
-                                Array.isArray(unavailableDates) &&
-                                unavailableDates.includes(
-                                  date.format("YYYY-MM-DD")
-                                )
-                              }
+                                (Array.isArray(unavailableDates) &&
+                                  unavailableDates.includes(date.format("MM-DD"))) 
+                              }                              
                               minDate={dayjs()} // Prevent selecting past dates
                               disablePast // Ensure past times are disabled
                             />
@@ -1165,14 +1269,14 @@ const CheckoutForm = () => {
                   {currentUser ? (
                     <>
                       <p className="text-black font-semibold mt-6 text-sm">
-                        {currentUser.firstName || "N/A"}{" "}
+                        {currentUser.firstName.toUpperCase() || "N/A"}{" "}
                         {currentUser.lastName || "N/A"}
                       </p>
                       <p className="text-black font-normal mt-1 text-sm">
                         {currentUser.email || "N/A"}
                       </p>
                       <p className="text-black font-normal mt-1 text-sm">
-                        {currentUser.mobileNumber || "N/A"}
+                        {mobileNumber  || "N/A"}
                       </p>
                     </>
                   ) : (
@@ -1202,42 +1306,52 @@ const CheckoutForm = () => {
                     </label>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    {/* First Name */}
-                    <div className="relative">
-                      <input
-                        type="text"
-                        id="firstName"
-                        className="block px-2.5 pt-4 w-full text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        placeholder=" "
-                      />
-                      <label
-                        htmlFor="firstName"
-                        className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 start-2 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
-                      >
-                        First Name
-                      </label>
-                    </div>
+                  {/* First Name */}
+                  <div className="relative mt-2">
+                    <input
+                      type="text"
+                      id="firstName"
+                      className="block px-2.5 pt-4 w-full text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
+                      value={
+                        firstName
+                          .split(" ")
+                          .map(
+                            (word) =>
+                              word.charAt(0).toUpperCase() +
+                              word.slice(1).toLowerCase()
+                          )
+                          .join(" ") || ""
+                      }
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder=" "
+                    />
+                    <label
+                      htmlFor="firstName"
+                      className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 start-2 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
+                    >
+                      First Name
+                    </label>
+                  </div>
 
-                    {/* Last Name */}
-                    <div className="relative">
-                      <input
-                        type="text"
-                        id="lastName"
-                        className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        placeholder=" "
-                      />
-                      <label
-                        htmlFor="lastName"
-                        className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 start-2 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
-                      >
-                        Last Name
-                      </label>
-                    </div>
+                  {/* Last Name */}
+                  <div className="relative mt-2">
+                    <input
+                      type="text"
+                      id="lastName"
+                      className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-black bg-transparent rounded-lg border-1 border-gray-300 focus:outline-none focus:ring-0 focus:border-black peer"
+                      value={
+                        lastName.charAt(0).toUpperCase() +
+                          lastName.slice(1).toLowerCase() || ""
+                      }
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder=" "
+                    />
+                    <label
+                      htmlFor="lastName"
+                      className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 peer-placeholder-shown:scale-110 start-2 peer-placeholder-shown:-translate-y-1/3 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4"
+                    >
+                      Last Name
+                    </label>
                   </div>
 
                   {/* Mobile Number */}
@@ -1256,6 +1370,9 @@ const CheckoutForm = () => {
                     >
                       Mobile Number
                     </label>
+                    {mobileError && (
+                      <p style={{ color: "red" }}>{mobileError}</p>
+                    )}
                   </div>
 
                   {/* Save Button */}
@@ -1268,9 +1385,16 @@ const CheckoutForm = () => {
                           ? "bg-prime hover:bg-orange-700"
                           : "bg-gray-400 cursor-not-allowed"
                       }`}
-                      disabled={!isSaveEnabled}
+                      disabled={!isSaveEnabled || isSubmitting}
                     >
-                      Save
+                      {isSubmitting ? (
+                        <div className="flex justify-center items-center space-x-2">
+                          <div className="w-5 h-5 border-4 border-t-transparent border-gray-500 rounded-full animate-spin"></div>
+                          <span>Sending OTP...</span>
+                        </div>
+                      ) : (
+                        "Save"
+                      )}
                     </button>
                   </div>
                 </>
@@ -1282,6 +1406,7 @@ const CheckoutForm = () => {
               <MobileNumberModal
                 mobileNumber={mobileNumber}
                 currentUserId={currentUser._id}
+                otpRecord={otpRecord}
                 onClose={handleCloseMobileModal}
               />
             )}
@@ -1329,8 +1454,7 @@ const CheckoutForm = () => {
               )}
             </div>
 
-            {/*PAYMENT DETAILS */}
-            {hasMobileNumber && (
+          
               <div className="mt-4 bg-white border border-gray-200 rounded-lg shadow p-4 sm:p-6 md:p-8">
                 <h1 className="font-bold text-[24px] text-black">Payment</h1>
                 {/* GCash Option */}
@@ -1364,7 +1488,7 @@ const CheckoutForm = () => {
                     <p className="mt-3 text-sm font-normal text-black font-sans">
                       You will be redirected to GCash after checkout. After
                       you&apos;ve performed the payment, you will be redirected
-                      back to Foodpanda.
+                      back to La Estellita.
                     </p>
                   )}
                 </div>
@@ -1420,7 +1544,7 @@ const CheckoutForm = () => {
                   />
                 </div>
               </div>
-            )}
+    
 
             {/* CONTRACT */}
             <div className="mt-4 bg-white border border-gray-200 rounded-lg shadow p-4 sm:p-6 md:p-8">
@@ -1521,7 +1645,7 @@ const CheckoutForm = () => {
                   (isPaymentComplete || selectedPaymentMethod !== "Paypal") &&
                   currentUser?.address &&
                   (source !== "booking" ||
-                    scheduledText !== "Select a date and time") 
+                    scheduledText !== "Select a date and time")
                     ? "bg-prime hover:bg-orange-700"
                     : "bg-gray-400 cursor-not-allowed"
                 }`}
@@ -1531,7 +1655,7 @@ const CheckoutForm = () => {
                   (selectedPaymentMethod === "Paypal" && !isPaymentComplete) ||
                   !currentUser?.address ||
                   (source === "booking" &&
-                    scheduledText === "Select a date and time") 
+                    scheduledText === "Select a date and time")
                 }
               >
                 Place Order

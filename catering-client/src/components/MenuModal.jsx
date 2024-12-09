@@ -1,27 +1,32 @@
 import React, { useContext, useEffect, useState } from "react";
 import CartPopover from "./CartPopover";
-import useCart from "../hooks/useCart";
 import { AuthContext } from "../contexts/AuthProvider";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 import useBookingCart from "../hooks/useBookingCart";
+import usePackage from "../hooks/usePackage"; // Import the hook for fetching packages
 
 const MenuModal = ({
   showMenuModal,
   handleMenuToggleModal,
   menuItems,
   selectedMenuType,
+  numberOfPax
 }) => {
   const { user } = useContext(AuthContext);
   const { id } = useParams();
   const [isCartPopoverVisible, setCartPopoverVisible] = useState(false);
   const [bookingCart, refetch] = useBookingCart();
-  const [priceRange, setPriceRange] = useState(500);
   const [maxBudget, setMaxBudget] = useState(1000);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [filteredItems, setFilteredItems] = useState(menuItems);
-  const [view, setView] = useState("custom"); 
+  const [view, setView] = useState("custom");
+  const [generatedMenu, setGeneratedMenu] = useState(null);
+
+  // Fetch available packages
+  const [packages, loading] = usePackage();
+
   const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
@@ -29,7 +34,7 @@ const MenuModal = ({
       setSelectedCategory("all");
     }
   }, [showMenuModal]);
-  
+
   useEffect(() => {
     if (showMenuModal) {
       document.body.classList.add("overflow-hidden");
@@ -49,19 +54,14 @@ const MenuModal = ({
     }
     
     // Filter by budget
-    filtered = filtered.filter((item) => item.price <= priceRange);
+    filtered = filtered.filter((item) => item.price <= maxBudget);
     
     setFilteredItems(filtered);
   };
-  
 
   useEffect(() => {
     filterItems(selectedCategory);
-  }, [selectedCategory, menuItems, priceRange]);
-
-  if (!showMenuModal) return null;
-
- 
+  }, [selectedCategory, menuItems, maxBudget]);
 
   const handleCategoryChange = (event) => {
     setSelectedCategory(event.target.value);
@@ -148,29 +148,103 @@ const MenuModal = ({
   const handleViewChange = (newView) => {
     setView(newView);
   };
+
+  // Function to generate a menu based on the user's budget and number of pax
+  const generateMenu = () => {
+    const totalPax = numberOfPax; // Get number of pax from props
+    const userBudget = maxBudget;
+
+    if (packages && packages.length > 0) {
+      // Find the suitable package based on pax and budget
+      const suitablePackage = packages.find((pkg) => {
+        const paxPerPackage = pkg.pax || 10; // Assume each package is for 10 pax
+        const packageCost = pkg.price * Math.ceil(totalPax / paxPerPackage); // Calculate cost based on number of pax
+        return packageCost <= userBudget; // Check if the cost fits the budget
+      });
+
+      if (suitablePackage) {
+        // Calculate the total cost for the number of pax
+        const paxPerPackage = suitablePackage.pax || 10; // Default to 10 pax per package
+        const totalPrice = suitablePackage.price * Math.ceil(totalPax / paxPerPackage); // Multiply by the number of packages required
+
+        setGeneratedMenu({
+          ...suitablePackage,
+          totalPrice,
+        });
+      } else {
+        Swal.fire({
+          position: "center",
+          icon: "warning",
+          title: "No suitable package found within your budget",
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      }
+    }
+  };
+
+  const handleAddPackageToCart = () => {
+    const packageItem = {
+      email: user.email,
+      bookingItemId: generatedMenu._id,
+      name: generatedMenu.name,
+      price: generatedMenu.totalPrice,
+      quantity: 1,
+      image: generatedMenu.image,
+    };
+
+    if (user && user.email) {
+      axios
+        .post(`${BASE_URL}/booking-cart`, packageItem)
+        .then((response) => {
+          if (response) {
+            refetch();
+            Swal.fire({
+              position: "center",
+              icon: "success",
+              title: "Package added to the cart.",
+              showConfirmButton: false,
+              timer: 1500,
+            });
+          }
+        })
+        .catch((error) => {
+          Swal.fire({
+            position: "center",
+            icon: "warning",
+            title: error.response?.data?.message || "An error occurred",
+            showConfirmButton: false,
+            timer: 1500,
+          });
+        });
+    } else {
+      Swal.fire({
+        title: "Please login to add the package to the cart",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Login now!",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate("/login", { state: { from: location } });
+        }
+      });
+    }
+  };
+
+  if (!showMenuModal) return null;
+
   return (
     <div className="fixed inset-0 z-[1050] flex items-center justify-center bg-black bg-opacity-75">
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl w-[90%] md:w-[80%] lg:w-[70%] xl:w-[60%] h-[90%] max-h-[90vh] m-4 overflow-hidden z-[1050] mt-9 flex flex-col">
-      <h3 className="text-2xl leading-6 font-medium text-gray-900 text-center py-4 border-b border-gray-200">
+        <h3 className="text-2xl leading-6 font-medium text-gray-900 text-center py-4 border-b border-gray-200">
           Menu Order
         </h3>
+        
+        {/* Budget Input */}
         <div className="flex flex-wrap justify-between px-4 py-4 border-b border-gray-200 gap-4">
-          {/* Budget Range Slider */}
           <div className="w-full md:w-1/3">
-            <label htmlFor="price-range" className="block text-sm font-medium text-gray-700">Budget Range</label>
-            <input
-              type="range"
-              id="price-range"
-              className="w-full accent-indigo-600"
-              min="0"
-              max={maxBudget}
-              value={priceRange}
-              onChange={(e) => setPriceRange(e.target.value)}
-            />
-            <div className="flex justify-between text-sm text-gray-500">
-              <span>₱{priceRange}</span>
-              <span>₱{maxBudget}</span>
-            </div>
             <label htmlFor="max-budget" className="block text-sm font-medium text-gray-700 mt-2">Enter your Budget</label>
             <input
               type="number"
@@ -197,14 +271,35 @@ const MenuModal = ({
               <option value="rice">Rice</option>
             </select>
           </div>
-
-          <div className="px-6 py-4 max-w-md">
-            <h4 className="text-lg font-semibold text-gray-900">Selected Menu Type</h4>
-            <p className="text-gray-700 text-base mb-4">
-              {selectedMenuType || "No menu type selected"}
-            </p>
-          </div>
         </div>
+
+        {/* Generate Menu Button */}
+        <div className="text-center mt-4">
+          <button
+            onClick={generateMenu}
+            className="px-6 py-2 text-white bg-blue-600 rounded-lg"
+          >
+            Generate Menu
+          </button>
+        </div>
+
+        {/* Display Generated Menu */}
+        {generatedMenu && (
+          <div className="p-6 mt-4 bg-gray-100 rounded-lg">
+            <h4 className="text-xl font-semibold">Recommended Package</h4>
+            <p>{generatedMenu.name}</p>
+            <p>For {numberOfPax} pax</p>
+            <p>Price: ₱{generatedMenu.totalPrice}</p>
+            {/* Display description */}
+            <p className="mt-2 text-sm text-gray-600">{generatedMenu.description}</p>
+            <button
+              onClick={handleAddPackageToCart}
+              className="px-6 py-2 text-white bg-green-600 rounded-lg mt-4"
+            >
+              Add Package to Cart
+            </button>
+          </div>
+        )}
 
         {/* Menu Items */}
         <div className="prose p-6 overflow-y-auto" style={{ maxHeight: "50vh" }}>
@@ -269,7 +364,7 @@ const MenuModal = ({
           {/* CartPopover */}
           <CartPopover isVisible={isCartPopoverVisible} />
 
-          {/*Confirm Button */}
+          {/* Confirm Button */}
           <button
             onClick={handleMenuToggleModal}
             type="button"

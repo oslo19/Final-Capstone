@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import useAxiosSecure from "../../../../hooks/useAxiosSecure";
 import useAxiosPublic from "../../../../hooks/useAxiosPublic";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 
 const AddPackage = () => {
   const { register, handleSubmit, reset, setValue } = useForm();
@@ -12,6 +12,7 @@ const AddPackage = () => {
   const axiosSecure = useAxiosSecure();
   const axiosPublic = useAxiosPublic();
   const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
   // Fetch all menu items for selection
   useEffect(() => {
     const fetchMenuItems = async () => {
@@ -25,42 +26,69 @@ const AddPackage = () => {
     fetchMenuItems();
   }, []);
 
-  // Auto-generate a package
-  const generatePackage = () => {
-    // Define package criteria
+  // Helper to select random number of items based on category
+  const selectRandomItems = (items, categoryKey) => {
     const packageCriteria = {
-      mainDishes: 3,
-      dessertOrAppetizer: 1,
-      rice: 2,
-      drinks: 1,
+      mainDishes: { min: 3, max: 5 },
+      dessertOrAppetizer: { min: 1, max: 2 },
+      rice: { min: 1, max: 2 },
+      drinks: { min: 1, max: 2 },
     };
 
+    const { min, max } = packageCriteria[categoryKey];
+    const numberOfItems = Math.floor(Math.random() * (max - min + 1)) + min;
+    return items.slice(0, numberOfItems);  // Adjust logic for randomization
+  };
+
+  // Auto-generate a package
+  const generatePackage = () => {
     // Filter items by category
-    const mainDishes = menuItems.filter(item => item.category === "pork" || item.category === "chicken" || item.category === "beef");
-    const dessertOrAppetizers = menuItems.filter(item => item.category === "dessert" || item.category === "appetizers");
-    const riceItems = menuItems.filter(item => item.category === "rice");
-    const drinks = menuItems.filter(item => item.category === "drinks");
+    const mainDishes = menuItems.filter(
+      (item) => item.category === "pork" || item.category === "chicken" || item.category === "beef"
+    );
+    const dessertOrAppetizers = menuItems.filter(
+      (item) => item.category === "dessert" || item.category === "appetizers"
+    );
+    const riceItems = menuItems.filter((item) => item.category === "rice");
+    const drinks = menuItems.filter((item) => item.category === "drinks");
 
-    // Helper to select items based on criteria
-    const selectItems = (items, count) => items.slice(0, count).map(item => item._id);
+    // Select items based on randomization and package criteria
+    const selectedMainDishes = selectRandomItems(mainDishes, "mainDishes");
+    const selectedDessertsOrAppetizers = selectRandomItems(dessertOrAppetizers, "dessertOrAppetizer");
+    const selectedRiceItems = selectRandomItems(riceItems, "rice");
+    const selectedDrinks = selectRandomItems(drinks, "drinks");
 
-    // Select items based on criteria
-    const selectedMainDishes = selectItems(mainDishes, packageCriteria.mainDishes);
-    const selectedDessertsOrAppetizers = selectItems(dessertOrAppetizers, packageCriteria.dessertOrAppetizer);
-    const selectedRiceItems = selectItems(riceItems, packageCriteria.rice);
-    const selectedDrinks = selectItems(drinks, packageCriteria.drinks);
+    // Combine all selected items into one array
+    const generatedItems = [
+      ...selectedMainDishes,
+      ...selectedDessertsOrAppetizers,
+      ...selectedRiceItems,
+      ...selectedDrinks,
+    ];
 
-    // Combine all selected items and remove duplicates
-    const generatedItems = [...selectedMainDishes, ...selectedDessertsOrAppetizers, ...selectedRiceItems, ...selectedDrinks];
+    // Calculate the total price
+    let generatedPrice = generatedItems.reduce((total, item) => total + item.price, 0);
 
-    // Calculate total price
-    const selectedMenuItems = menuItems.filter(item => generatedItems.includes(item._id));
-    const generatedPrice = selectedMenuItems.reduce((total, item) => total + item.price, 0);
+    // Check if the total price is within the required range (1,000 to 10,000)
+    if (generatedPrice < 1000) {
+      // If the price is less than 1000, we can add more expensive items or increase the quantity
+      while (generatedPrice < 1000) {
+        const itemToAdd = mainDishes[Math.floor(Math.random() * mainDishes.length)]; // Add a random main dish if needed
+        generatedItems.push(itemToAdd);
+        generatedPrice += itemToAdd.price;
+      }
+    } else if (generatedPrice > 10000) {
+      // If the price exceeds 10,000, we reduce the number of items or pick cheaper items
+      while (generatedPrice > 10000) {
+        const itemToRemove = generatedItems.pop(); // Remove the last item (can be optimized)
+        generatedPrice -= itemToRemove.price;
+      }
+    }
 
-    // Update state with selected items and total price
-    setSelectedItems(generatedItems);
+    // Update the state with the selected items and total price
+    setSelectedItems(generatedItems.map((item) => item._id)); // Store only item IDs
     setTotalPrice(generatedPrice);
-    setValue("price", generatedPrice);  // Update form with generated price
+    setValue("price", generatedPrice); // Update form with generated price
   };
 
   // Handle package form submission
@@ -69,11 +97,11 @@ const AddPackage = () => {
       name: data.name || "Auto-Generated Package",
       description: data.description || "This is an auto-generated package based on selected criteria.",
       price: totalPrice,
-      items: selectedItems,  // Array of selected menu item IDs
+      items: selectedItems, // Array of selected menu item IDs
     };
 
     try {
-      await axiosSecure.post('/packages', packageData);
+      await axiosSecure.post("/packages", packageData);
       reset();
       setSelectedItems([]);
       setTotalPrice(0);
@@ -148,7 +176,7 @@ const AddPackage = () => {
       <h3 className="my-4">Selected Items:</h3>
       <ul>
         {selectedItems.map((itemId) => {
-          const item = menuItems.find(i => i._id === itemId);
+          const item = menuItems.find((i) => i._id === itemId);
           return <li key={itemId}>{item?.name} - ₱{item?.price}</li>;
         })}
       </ul>

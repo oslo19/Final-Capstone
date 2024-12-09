@@ -473,7 +473,6 @@ const RentalDetails = () => {
                     data-original="#000000"
                   />
                 </svg>
-                Free delivery on order
               </div>
             </div>
           </div>

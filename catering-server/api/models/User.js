@@ -38,6 +38,7 @@ const userSchema = new Schema({
         {
           type: mongoose.Schema.Types.ObjectId,
           ref: "Contract",
+          required: false,
         },
       ],
 });

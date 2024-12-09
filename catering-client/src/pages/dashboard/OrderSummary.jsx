@@ -1,10 +1,10 @@
-import React from "react";
-import { useLocation } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 
-const OrderReceipt = ({ orders }) => {
+const OrderReceipt = ({ order }) => {
   const formatDate = (date) => new Date(date).toLocaleDateString();
   const formatTime = (date) => new Date(date).toLocaleTimeString();
 
@@ -94,74 +94,103 @@ const OrderReceipt = ({ orders }) => {
         </p>
       </div>
       <div className="my-6">
-        {orders.map((order, index) => (
-          <div key={index} className="mb-6 border-b border-gray-300 pb-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p>
-                  <strong>RCode:</strong> {order.transactionId}
-                </p>
-                <p>
-                  <strong>Full Name:</strong> {order.firstName} {order.lastName}
-                </p>
-                <p>
-                  <strong>Contact #:</strong> {order.mobileNumber}
-                </p>
-                <p>
-                  <strong>Address:</strong> {order.address}
-                </p>
-                <p>
-                  <strong>Status:</strong> {getStatusBadge(order.status)}
-                </p>
-              </div>
-              <div>
-                <p>
-                  <strong>Event Date:</strong> {formatDate(order.createdAt)}
-                </p>
-                <p>
-                  <strong>Time:</strong> {formatTime(order.createdAt)}
-                </p>
-                <p>
-                  <strong>Venue:</strong> {order.venue || "N/A"}
-                </p>
-                <p>
-                  <strong>Occasion:</strong> {order.typeOfEvent}
-                </p>
-                <p>
-                  <strong>Type of Menu:</strong> {order.typeOfMenu}
-                </p>
-              </div>
-            </div>
-            <div className="mt-4">
+        <div className="mb-6 border-b border-gray-300 pb-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
               <p>
-                <strong>No. of Pax:</strong> {order.numberOfPax}
+                <strong>RCode:</strong> {order.transactionId}
               </p>
               <p>
-                <strong>Payable:</strong> ₱{order.price.toLocaleString()}
+                <strong>Full Name:</strong> {order.firstName} {order.lastName}
               </p>
               <p>
-                <strong>Remaining Balance:</strong> ₱
-                {order.remainingBalance.toLocaleString()}
+                <strong>Contact #:</strong> {order.mobileNumber}
               </p>
               <p>
-                <strong>Mode of Payment:</strong> {order.modeOfPayment}
+                <strong>Address:</strong> {order.address}
+              </p>
+              <p>
+                <strong>Status:</strong> {getStatusBadge(order.status)}
               </p>
             </div>
-            {order.items.menuItems?.length > 0 && (
-              <div className="mt-4">
-                <h3 className="text-lg font-bold">Menu Items</h3>
-                <ul className="list-disc list-inside">
-                  {order.items.menuItems.map((item, idx) => (
-                    <li key={idx}>
-                      {item.quantity} x {item.name} - ₱
-                      {(item.quantity * item.price).toLocaleString()}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            <div>
+              <p>
+                <strong>Event Date:</strong> {formatDate(order.createdAt)}
+              </p>
+              <p>
+                <strong>Time:</strong> {formatTime(order.createdAt)}
+              </p>
+              <p>
+                <strong>Venue:</strong> {order.venue || "N/A"}
+              </p>
+              <p>
+                <strong>Occasion:</strong> {order.typeOfEvent}
+              </p>
+              <p>
+                <strong>Type of Menu:</strong> {order.typeOfMenu}
+              </p>
+            </div>
           </div>
-        ))}
+          <div className="mt-4">
+            <p>
+              <strong>No. of Pax:</strong> {order.numberOfPax}
+            </p>
+            <p>
+              <strong>Payable:</strong> ₱{order.price.toLocaleString()}
+            </p>
+            <p>
+              <strong>Remaining Balance:</strong> ₱
+              {order.remainingBalance.toLocaleString()}
+            </p>
+            <p>
+              <strong>Mode of Payment:</strong> {order.modeOfPayment}
+            </p>
+          </div>
+          {/* Display Menu Items */}
+          {order.items.menuItems?.length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-lg font-bold">Menu Items</h3>
+              <ul className="list-disc list-inside">
+                {order.items.menuItems.map((item, idx) => (
+                  <li key={idx}>
+                    {item.quantity} x {item.name} - ₱
+                    {(item.quantity * item.price).toLocaleString()}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Display Venue Items */}
+          {order.items.venueItems?.length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-lg font-bold">Venue Items</h3>
+              <ul className="list-disc list-inside">
+                {order.items.venueItems.map((item, idx) => (
+                  <li key={idx}>
+                    {item.quantity} x {item.name} - ₱
+                    {(item.quantity * item.price).toLocaleString()}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Display Rental/Amenities Items */}
+          {order.items.rentalItems?.length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-lg font-bold">Rental / Amenities Items</h3>
+              <ul className="list-disc list-inside">
+                {order.items.rentalItems.map((item, idx) => (
+                  <li key={idx}>
+                    {item.quantity} x {item.name} - ₱
+                    {(item.quantity * item.price).toLocaleString()}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
       <div className="mt-4 text-center">
         <button className="btn btn-primary hidden-print" onClick={handlePrint}>
@@ -174,28 +203,32 @@ const OrderReceipt = ({ orders }) => {
 
 const Order = () => {
   const { user } = useAuth();
-  const location = useLocation();
-  const orderFromSearch = location.state?.order;
+  const { transactionId } = useParams(); // Get the transactionId from URL
+  const [order, setOrder] = useState(null);
   const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
-  const { data: orders = [] } = useQuery({
-    queryKey: ["bookingOrders", user?.email],
-    queryFn: async () => {
-      const res = await fetch(`${BASE_URL}/orders?email=${user?.email}&source=booking`);
-      return res.json();
-    },
-    enabled: !orderFromSearch,
-  });
+  useEffect(() => {
+    if (transactionId) {
+      const fetchOrder = async () => {
+        const response = await fetch(`${BASE_URL}/orders/${transactionId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setOrder(data);
+        } else {
+          Swal.fire("Error", "Order not found.", "error");
+        }
+      };
+      fetchOrder();
+    }
+  }, [transactionId]);
 
   return (
     <div className="max-w-screen-lg mx-auto py-10">
-      {orderFromSearch ? (
-        <OrderReceipt orders={[orderFromSearch]} />
-      ) : orders.length > 0 ? (
-        <OrderReceipt orders={orders} />
+      {order ? (
+        <OrderReceipt order={order} />
       ) : (
         <div className="text-center mt-20">
-          <p>No booking orders found.</p>
+          <p>Loading your order...</p>
         </div>
       )}
     </div>

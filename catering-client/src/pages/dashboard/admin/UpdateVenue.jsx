@@ -14,41 +14,69 @@ const UpdateVenue = () => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   const navigate = useNavigate()
 
-  // image hosting key
-  const image_hosting_key = import.meta.env.VITE_IMAGE_HOSTING_KEY
-  const image_hosting_api = `https://api.imgbb.com/1/upload?key=${image_hosting_key}`
+  // Cloudinary API URL and Upload Preset
+  const cloudinaryUploadUrl = `https://api.cloudinary.com/v1_1/dtg6ofu1q/image/upload`
+  const uploadPreset = "unsigned_preset" // Replace with your Cloudinary upload preset
 
   const onSubmit = async (data) => {
-    const imageFile = { image: data.image[0] }
-    const hostingImg = await axiosPublic.post(image_hosting_api, imageFile, {
-      headers: {
-        "content-type": "multipart/form-data",
-      },
-    })
+    let imageUrl = item.image
 
-    if (hostingImg.data.success) {
-      const venueData = {
-        venueName: data.venueName,
-        capacity: parseInt(data.capacity),
-        rentalPrice: parseFloat(data.rentalPrice),
-        description: data.description,
-        image: hostingImg.data.data.display_url,
+    // If a new image is uploaded, upload it to Cloudinary
+    if (data.image?.[0]) {
+      const imageFile = data.image[0]
+      try {
+        const formData = new FormData()
+        formData.append("file", imageFile)  // Attach the image file
+        formData.append("upload_preset", uploadPreset)  // Cloudinary preset
+
+        // Upload image to Cloudinary
+        const response = await fetch(cloudinaryUploadUrl, {
+          method: "POST",
+          body: formData,
+        })
+
+        const jsonResponse = await response.json()
+
+        if (response.ok) {
+          imageUrl = jsonResponse.secure_url // Cloudinary image URL
+        } else {
+          Swal.fire("Error", "Image upload failed. Please try again.", "error")
+          return
+        }
+      } catch (error) {
+        console.error("Image upload error:", error)
+        Swal.fire("Error", "Image upload failed. Please try again.", "error")
+        return
       }
+    }
 
-      // Update the venue
-      const postVenue = axiosSecure.patch(`/venues/${item._id}`, venueData)
+    // Prepare venue data for submission
+    const venueData = {
+      venueName: data.venueName,
+      capacity: parseInt(data.capacity),
+      rentalPrice: parseFloat(data.rentalPrice),
+      description: data.description,
+      image: imageUrl,
+    }
 
-      if (postVenue) {
+    // Update the venue
+    try {
+      const postVenue = await axiosSecure.patch(`/venues/${item._id}`, venueData)
+
+      if (postVenue.status === 200) {
         reset()
         Swal.fire({
           position: "top-end",
           icon: "success",
           title: "Your venue has been updated!",
           showConfirmButton: false,
-          timer: 1500
+          timer: 1500,
         })
         navigate("/dashboard/manage-venues")
       }
+    } catch (error) {
+      console.error("Venue update error:", error)
+      Swal.fire("Error", "Failed to update venue. Please try again.", "error")
     }
   }
 

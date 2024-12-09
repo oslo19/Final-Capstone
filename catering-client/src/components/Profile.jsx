@@ -1,27 +1,55 @@
-import React, { useContext, useRef, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../contexts/AuthProvider";
 import avatarImg from "/images/avatar.jpg";
 import { Link, useNavigate } from "react-router-dom";
 import useUsers from "../hooks/useUser";
+import useOrder from "../hooks/useOrder";
 
 const Profile = ({ user }) => {
   const { logOut } = useContext(AuthContext);
   const navigate = useNavigate();
   const { users } = useUsers();
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);  // Manage drawer state
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { orders, refetch } = useOrder();
 
+  // Find the current user from the users list
   const currentUser = users.find((u) => u.email === user.email);
+
+  // Find orders for the current user
+  const currentUserCartOrder = orders.find(
+    (o) => o.email === currentUser?.email && o.source === "cart"
+  );
+  const currentUserBookingOrder = orders.find(
+    (o) => o.email === currentUser?.email && o.source === "booking"
+  );
 
   // Logout function
   const handleLogout = () => {
     logOut()
       .then(() => {
-        // Sign-out successful.
         navigate("/");
       })
       .catch((error) => {
         console.log(error);
       });
+  };
+
+  // Navigate to order-tracking
+  const handleOrderClick = () => {
+    if (currentUserCartOrder?.transactionId) {
+      navigate(`/order-tracking/${currentUserCartOrder.transactionId}`);
+    } else {
+      console.log("No cart order transactionId found.");
+    }
+  };
+
+  // Navigate to booking order
+  const handleBookingClick = () => {
+    if (currentUserBookingOrder?.transactionId) {
+      navigate(`/order/${currentUserBookingOrder.transactionId}`);
+    } else {
+      console.log("No booking transactionId found.");
+    }
   };
 
   // Toggle drawer visibility when avatar is clicked
@@ -32,18 +60,16 @@ const Profile = ({ user }) => {
   // Close the drawer if the click is outside the avatar or drawer
   const closeDrawerOnClickOutside = (e) => {
     if (
-      !e.target.closest("#my-drawer-4") && // Check if click is outside drawer
-      !e.target.closest(".avatar")          // Check if click is outside avatar
+      !e.target.closest("#my-drawer-4") &&
+      !e.target.closest(".avatar")
     ) {
-      setIsDrawerOpen(false);  // Close the drawer if outside click
+      setIsDrawerOpen(false);
     }
   };
 
   // Add event listener for clicks outside
   useEffect(() => {
     document.addEventListener("click", closeDrawerOnClickOutside);
-
-    // Cleanup event listener on unmount
     return () => {
       document.removeEventListener("click", closeDrawerOnClickOutside);
     };
@@ -56,15 +82,14 @@ const Profile = ({ user }) => {
           id="my-drawer-4"
           type="checkbox"
           className="drawer-toggle"
-          checked={isDrawerOpen}  // Controlled state for the drawer
-          onChange={() => {}}  // Prevent direct manipulation by user
+          checked={isDrawerOpen}
+          onChange={() => {}}
         />
         <div className="drawer-content">
-          {/* Page content here */}
           <label
             htmlFor="my-drawer-4"
             className="drawer-button btn btn-ghost btn-circle avatar"
-            onClick={toggleDrawer}  // Toggle the drawer when avatar is clicked
+            onClick={toggleDrawer}
           >
             <div className="w-10 rounded-full">
               {user.photoURL ? (
@@ -82,12 +107,11 @@ const Profile = ({ user }) => {
             className="drawer-overlay"
           ></label>
           <ul className="menu p-4 w-80 min-h-full bg-base-200 text-base-content">
-            {/* Sidebar content here */}
             <li>
-              <a href="/update-profile">Profile</a>
+              <a onClick={handleOrderClick}>Order</a>
             </li>
             <li>
-              <a href="/order-tracking/:transactionId">Order</a>
+              <a onClick={handleBookingClick}>Booking</a>
             </li>
             {currentUser?.role === "admin" && (
               <li>

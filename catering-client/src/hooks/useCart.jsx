@@ -15,22 +15,22 @@ const useCart = () => {
   
     const { refetch, data: cart = [] } = useQuery({
       queryKey: ['carts', user?.email],
-      enabled: !!user?.email && !!token,  // Run query only if user and token exist
+      enabled: !!user?.email && !!token,
+      refetchInterval: 10000,  // Poll every 10 seconds
       queryFn: async () => {
         const res = await fetch(`${BASE_URL}/carts?email=${user.email}`, {
           headers: {
             authorization: `Bearer ${token}`,
           },
         });
-  
         if (!res.ok) {
           const errorMessage = await res.text();
           throw new Error(`Error ${res.status}: ${errorMessage}`);
         }
-  
         return res.json();
       },
     });
+    
 
     
   

@@ -1,48 +1,69 @@
 import React from "react";
 import { FaUtensils } from "react-icons/fa";
 import { useForm } from "react-hook-form";
-import useAxiosPublic from "../../../../hooks/useAxiosPublic";
-import useAxiosSecure from "../../../../hooks/useAxiosSecure";
 import Swal from "sweetalert2";
+import useAxiosSecure from "../../../../hooks/useAxiosSecure";
 
 const AddMenu = () => {
   const { register, handleSubmit, reset } = useForm();
-  const axiosPublic = useAxiosPublic();
   const axiosSecure = useAxiosSecure();
   const BASE_URL = import.meta.env.VITE_BACKEND_URL;
-  const image_hosting_key = import.meta.env.VITE_IMAGE_HOSTING_KEY;
-  const image_hosting_api = `https://api.imgbb.com/1/upload?key=${image_hosting_key}`;
+  
+  // Cloudinary Configuration
+  const cloudinaryUploadUrl = `https://api.cloudinary.com/v1_1/dtg6ofu1q/image/upload`;
+  const uploadPreset = "unsigned_preset"; 
 
   const onSubmit = async (data) => {
-    const imageFile = { image: data.image[0] };
-    const hostingImg = await axiosPublic.post(image_hosting_api, imageFile, {
-      headers: { "content-type": "multipart/form-data" },
-    });
+    try {
+        // Prepare the FormData object
+        const formData = new FormData();
+        formData.append("file", data.image[0]); // Attach the image file
+        formData.append("upload_preset", uploadPreset); // Use your unsigned preset name
 
-    if (hostingImg.data.success) {
-      const menuItem = {
-        name: data.name,
-        category: data.category,
-        price: parseFloat(data.price),
-        recipe: data.recipe,
-        quantity: 1,
-        menuTypes: data.menuTypes || [], // Updated to handle array
-        image: hostingImg.data.data.display_url,
-      };
-
-      const postMenuItem = await axiosSecure.post("/menu", menuItem);
-      if (postMenuItem) {
-        reset();
-        Swal.fire({
-          position: "top-end",
-          icon: "success",
-          title: "Your Item is inserted successfully!",
-          showConfirmButton: false,
-          timer: 1500,
+        // Upload the image to Cloudinary
+        const response = await fetch(cloudinaryUploadUrl, {
+            method: "POST",
+            body: formData,
         });
-      }
+
+        const jsonResponse = await response.json();
+
+        if (response.ok) {
+            // Prepare the menu item object with the uploaded image URL
+            const menuItem = {
+                name: data.name,
+                category: data.category,
+                price: parseFloat(data.price),
+                recipe: data.recipe,
+                quantity: 1,
+                menuTypes: data.menuTypes || [], // Handle multiple menu types (checkboxes)
+                image: jsonResponse.secure_url, // Save the secure URL of the uploaded image
+            };
+
+            // Send the menu item data to your server
+            await axiosSecure.post("/menu", menuItem);
+
+            // Reset the form and show a success message
+            reset();
+            Swal.fire({
+                position: "top-end",
+                icon: "success",
+                title: "Your item has been added successfully!",
+                showConfirmButton: false,
+                timer: 1500,
+            });
+        } else {
+            throw new Error(jsonResponse.error.message || "Image upload failed.");
+        }
+    } catch (error) {
+        console.error("Error uploading image:", error);
+        Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: "Image upload failed. Please try again.",
+        });
     }
-  };
+};
 
   return (
     <div className="w-full md:w-[870px] px-4 mx-auto">

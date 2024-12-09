@@ -2,7 +2,7 @@ import React from 'react';
 
 const PrivacyPolicy = () => {
   return (
-    <div className="max-w-4xl mx-auto p-6 md:p-12 text-gray-800">
+    <div className="max-w-4xl mx-auto p-6 md:p-12 text-gray-200 mt-16">
       <h1 className="text-3xl font-bold mb-4">Privacy Policy</h1>
       <p className="text-sm text-gray-600 mb-8">Last updated: November 27, 2024</p>
 
@@ -89,11 +89,11 @@ const PrivacyPolicy = () => {
       <ul className="list-disc list-inside space-y-2">
         <li>
           By email:{' '}
-          <a href="mailto:zozobradogenard@gmail.com" className="text-blue-600 underline">
-            zozobradogenard@gmail.com
+          <a href="mailto:laestelitacateringservices@gmail.com" className="text-blue-600 underline">
+          laestelitacateringservices@gmail.com
           </a>
         </li>
-        <li>By phone number: 09078850765</li>
+        <li>By phone number: (032) 272 8528</li>
       </ul>
     </div>
   );

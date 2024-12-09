@@ -1,6 +1,6 @@
-import React from 'react'
-import { useLoaderData, useNavigate } from 'react-router-dom'
-import Swal from 'sweetalert2'
+import React from 'react';
+import { useLoaderData, useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import useAxiosPublic from '../../../hooks/useAxiosPublic';
 import { useForm } from 'react-hook-form';
 import useAxiosSecure from '../../../hooks/useAxiosSecure';
@@ -15,23 +15,32 @@ const UpdateMenu = () => {
   const axiosSecure = useAxiosSecure();
   const navigate = useNavigate();
   const BASE_URL = import.meta.env.VITE_BACKEND_URL;
-  // image hosting key
-  const image_hosting_key = import.meta.env.VITE_IMAGE_HOSTING_KEY;
-  const image_hosting_api = `https://api.imgbb.com/1/upload?key=${image_hosting_key}`;
+
+  // Cloudinary Configuration
+  const cloudinaryUploadUrl = `https://api.cloudinary.com/v1_1/dtg6ofu1q/image/upload`;
+  const uploadPreset = "unsigned_preset"; // Cloudinary unsigned preset
 
   const onSubmit = async (data) => {
     let imageUrl = item.image;
 
-    // If a new image is uploaded, upload it to the image hosting service
+    // If a new image is uploaded, upload it to Cloudinary
     if (data.image?.[0]) {
-      const imageFile = { image: data.image[0] };
+      const imageFile = data.image[0];
       try {
-        const hostingImg = await axiosPublic.post(image_hosting_api, imageFile, {
-          headers: { "content-type": "multipart/form-data" },
+        const formData = new FormData();
+        formData.append("file", imageFile); // Attach the image file
+        formData.append("upload_preset", uploadPreset); // Cloudinary upload preset
+
+        // Upload to Cloudinary
+        const response = await fetch(cloudinaryUploadUrl, {
+          method: "POST",
+          body: formData,
         });
 
-        if (hostingImg.data.success) {
-          imageUrl = hostingImg.data.data.display_url;
+        const jsonResponse = await response.json();
+
+        if (response.ok) {
+          imageUrl = jsonResponse.secure_url; // Cloudinary URL
         } else {
           Swal.fire("Error", "Image upload failed. Please try again.", "error");
           return;
@@ -43,6 +52,7 @@ const UpdateMenu = () => {
       }
     }
 
+    // Prepare the menu item data
     const menuItem = {
       name: data.name,
       category: data.category,
@@ -80,6 +90,7 @@ const UpdateMenu = () => {
 
       <div>
         <form onSubmit={handleSubmit(onSubmit)}>
+          {/* Recipe Name */}
           <div className="form-control w-full">
             <label className="label">
               <span className="label-text">Recipe Name*</span>
@@ -195,7 +206,7 @@ const UpdateMenu = () => {
         </form>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default UpdateMenu;

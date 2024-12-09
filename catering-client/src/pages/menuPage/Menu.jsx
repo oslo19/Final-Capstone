@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Cards from "../../components/Cards";
 import { FaFilter } from "react-icons/fa";
 import MenuModal from "../../components/MenuModal";
+import PackagesCard from "../../components/PackagesCard";  // Import the PackagesCard component
 
 const Menu = () => {
   const [menu, setMenu] = useState([]);
@@ -12,7 +13,6 @@ const Menu = () => {
   const [itemsPerPage] = useState(8); // Number of items to display per page
   const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
-  
   useEffect(() => {
     // Fetch data from the backend
     const fetchData = async () => {
@@ -74,7 +74,6 @@ const Menu = () => {
     setCurrentPage(1);
   };
 
-//   console.log(filteredItems);
   // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -82,64 +81,62 @@ const Menu = () => {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-
   return (
     <div>
-      {/* menu banner */}
+      {/* Menu Banner */}
       <div className="max-w-screen-2xl container mx-auto xl:px-24 px-4">
-      <div className="py-24 md:py-48 flex flex-col items-center justify-center bg-cover bg-center">
-          {/* content */}
+        <div className="py-24 md:py-48 flex flex-col items-center justify-center bg-cover bg-center">
+          {/* Content */}
           <div className="text-center px-4 space-y-5 md:space-y-7">
-          <h2 className="text-3xl md:text-5xl font-bold leading-snug text-white">
+            <h2 className="text-3xl md:text-5xl font-bold leading-snug text-white">
               For the Love of Delicious <span className="text-prime">Food</span>
             </h2>
             <p className="text-white text-base md:text-xl max-w-2xl mx-auto">
               Come with family & feel the joy of mouthwatering food such as
               Greek Salad, Lasagne, Butternut Pumpkin, Tokusen Wagyu, Olivas
-              Rellenas and more for a moderate cost
+              Rellenas, and more for a moderate cost.
             </p>
           </div>
         </div>
       </div>
 
-      {/* menu shop  */}
+      {/* Menu Section */}
       <div className="section-container">
-      <div className="flex flex-col md:flex-row flex-wrap md:justify-between items-center space-y-3 mb-8">
-          
-           {/* all category buttons */}
-           <div className="flex flex-wrap gap-3 text-white">
-        {[
-          "All",
-          "Appetizer",
-          "Pork",
-          "Chicken",
-          "Seafoods",
-          "Beef",
-          "Noodles/Pasta",
-          "Vegies/Others",
-          "Dessert",
-          "Rice",
-        ].map((category, index) => (
-          <button
-            key={index}
-            onClick={
-              category === "All"
-                ? showAll
-                : () => filterItems(category.toLowerCase())
-            }
-            className={`px-4 py-2 rounded-full ${
-              selectedCategory === category.toLowerCase()
-                ? "bg-prime text-white"
-                : "bg-gray-700 text-gray-200"
-            }`}
-          >
-            {category}
-          </button>
-        ))}
-      </div>
+        <div className="flex flex-col md:flex-row flex-wrap md:justify-between items-center space-y-3 mb-8">
+          {/* Category Filter Buttons */}
+          <div className="flex flex-wrap gap-3 text-white">
+            {[
+              "All",
+              "Appetizer",
+              "Pork",
+              "Chicken",
+              "Seafoods",
+              "Beef",
+              "Noodles/Pasta",
+              "Vegies/Others",
+              "Dessert",
+              "Rice",
+            ].map((category, index) => (
+              <button
+                key={index}
+                onClick={
+                  category === "All"
+                    ? showAll
+                    : () => filterItems(category.toLowerCase())
+                }
+                className={`px-4 py-2 rounded-full ${
+                  selectedCategory === category.toLowerCase()
+                    ? "bg-prime text-white"
+                    : "bg-gray-700 text-gray-200"
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
 
-            {/* filter options */}
-            <div className="flex items-center space-x-2">
+          {/* Sort Options */}
+          <div className="flex items-center space-x-2">
             <div className="bg-black p-2 rounded-md">
               <FaFilter className="text-white h-4 w-4" />
             </div>
@@ -158,18 +155,16 @@ const Menu = () => {
           </div>
         </div>
 
-        {/* product card */}
+        {/* Product Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {currentItems.map((item, index) => (
             <Cards key={index} item={item} />
-            
           ))}
         </div>
-       
       </div>
 
-       {/* Pagination */}
-       <div className="flex justify-center my-8 gap-2 flex-wrap">
+      {/* Pagination */}
+      <div className="flex justify-center my-8 gap-2 flex-wrap">
         {Array.from({ length: Math.ceil(filteredItems.length / itemsPerPage) }).map((_, index) => (
           <button
             key={index + 1}
@@ -181,6 +176,12 @@ const Menu = () => {
             {index + 1}
           </button>
         ))}
+      </div>
+
+      {/* Packages Section */}
+      <div className="my-16">
+        <h2 className="text-3xl text-center text-white mb-6">Available Packages</h2>
+        <PackagesCard /> {/* Rendering the PackagesCard component */}
       </div>
     </div>
   );
